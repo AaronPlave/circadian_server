@@ -10,7 +10,7 @@ if not MONGO_URI:
     MONGO_URI = 'mongodb://localhost:27017/circadian'
 
 client = pymongo.MongoClient(MONGO_URI)
-db = client.circadian
+db = client.get_default_database()
 SOURCES = db["sources"]
 USERS = db["users"]
 
