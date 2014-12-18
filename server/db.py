@@ -5,7 +5,7 @@ from bson.json_util import dumps
 
 
 # Standard URI format: mongodb://[dbuser:dbpassword@]host:port/dbname
-MONGO_URI = os.environ.get('MONGO_URI')
+MONGO_URI = os.environ.get('MONGOLAB_URI')
 if not MONGO_URI:
     MONGODB_URI = 'mongodb://localhost:27017/circadian'
 
