@@ -8,6 +8,10 @@ Adding Source Steps:
 """
 
 # import db
+from bson.json_util import dumps
 
 def add_source(source):
-	return source
+	result = db.get_source_by_url(source)
+	if result:
+		return dumps(result)
+	scraping_result = scraping.scrape_new_source(source)

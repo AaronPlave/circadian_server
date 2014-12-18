@@ -1,48 +1,23 @@
-# from pymongo import MongoClient
+from pymongo import MongoClient
 
-# client = MongoClient()
-# db = client.circadian
+### Standard URI format: mongodb://[dbuser:dbpassword@]host:port/dbname
+MONGODB_URI = 'mongodb://heroku_app32610402:e5qn8bjvu94bgmg6aqo8lfecd@ds027741.mongolab.com:27741/heroku_app32610402' 
 
-# sources = db.sources
+client = pymongo.MongoClient(MONGODB_URI)
 
-# def format_mongo_objs(mongo_objs):
-#     """
-#     Formats python datetime into isoformat for each mongo_obj
-#     if the obj has a time.
-#     Also strips out object ID
-#     """
-#     if not mongo_objs:
-#         return []
-#     for mongo_obj in mongo_objs:
-#         # remove object_id
-#         try:
-#             mongo_obj.pop('_id')
-#         except:
-#             print "API: mongo_obj has no _id, panic!"
+db = client.circadian
 
-#         old_time = mongo_obj.get('time')
-#         if old_time:
-#             mongo_obj['time'] = old_time.isoformat()
+sources = db.sources
 
-#         #Case for times nested in "data" field, for static json
-#         data = mongo_obj.get('data')
-#         if data:
-#             old_time_2 = data.get('time')
-#             if old_time_2:
-#                 print mongo_obj['data']['time'][0]
-#                 mongo_obj['data']['time'][0] = old_time_2[0].isoformat()
+def get_source_by_url(source_url):
+	"""
+	Returns the MongoObject with source_url == source_url if one exists.
+	"""
+	result = sources.find({"source_url": source_url})
+	if result.count() != 0:
+		return
 
-#     return mongo_objs
-
-# def get_source_by_url(source_url):
-# 	"""
-# 	Returns the MongoObject with source_url == source_url if one exists.
-# 	"""
-# 	result = sources.find({"source_url": source_url})
-# 	if result.count() != 0:
-# 		return 
-
-# def get_source_by_id(source_id):
-# 	"""
-# 	Returns the MongoObject with id == source_id if one exists.
-# 	"""
+def get_source_by_id(source_id):
+	"""
+	Returns the MongoObject with id == source_id if one exists.
+	"""
