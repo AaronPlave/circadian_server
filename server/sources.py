@@ -7,12 +7,12 @@ Adding Source Steps:
 	failure.
 """
 
-import db
+# import db
 from bson.json_util import dumps
 
 
 def add_source(source):
-    result = db.get_source_by_url(source)
+    # result = db.get_source_by_url(source)
     if result:
         return dumps(result)
     else:
