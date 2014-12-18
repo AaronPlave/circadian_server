@@ -9,10 +9,8 @@ if not MONGO_URL:
     MONGODB_URI = "mongodb://localhost:27017/circadian"
 
 client = pymongo.MongoClient(MONGODB_URI)
-
 db = client.circadian
-
-SOURCES = db.sources
+SOURCES = db["sources"]
 
 
 def get_source_by_url(source_url):
