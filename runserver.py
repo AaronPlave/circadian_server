@@ -3,17 +3,6 @@ from flask import Flask
 from server import scraping, sources
 app = Flask(__name__)
 
-
-# Standard URI format: mongodb://[dbuser:dbpassword@]host:port/dbname
-MONGODB_URI = 'mongodb://heroku_app32610402:e5qn8bjvu94bgmg6aqo8lfecd@ds027741.mongolab.com:27741/heroku_app32610402'
-
-MONGO_URL = os.environ.get('MONGO_URL')
-if not MONGO_URL:
-    MONGO_URL = "mongodb://localhost:27017/circadian"
-
-app.config['MONGO_URI'] = MONGO_URL
-
-
 @app.route('/')
 def hello():
     return "ALIVE"
