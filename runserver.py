@@ -20,9 +20,9 @@ def hello():
 
 
 #### TEST ####
-test_data = {"songs": [{"title": "BEER", "_id": 1, "imageUrl":
+test_data = {"songs": [{"title": "BEER", "_id": 1, "imageURL":
                         "http://fcdn.mtbr.com/attachments/lights-night-riding/939033d1416009231-well-well-well-i-have-4500-lumens-well-well-well.jpg"},
-                       {"title": "ALKEHAUL!", "_id": 20, "imageUrl": "http://fcdn.mtbr.com/attachments/lights-night-riding/939033d1416009231-well-well-well-i-have-4500-lumens-well-well-well.jpg"}]}
+                       {"title": "ALKEHAUL!", "_id": 20, "imageURL": "http://fcdn.mtbr.com/attachments/lights-night-riding/939033d1416009231-well-well-well-i-have-4500-lumens-well-well-well.jpg"}]}
 import json
 
 
