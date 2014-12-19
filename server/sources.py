@@ -7,6 +7,7 @@ Adding Source Steps:
     failure.
 """
 
+import time
 import db
 from bson.json_util import dumps
 import multiprocessing
@@ -37,7 +38,6 @@ def refresh_sources():
     output = pool.map(scraping.scrape_source,sources_to_scrape)
     print output
 
-import time
 def test():
     """
     Simulates stuff

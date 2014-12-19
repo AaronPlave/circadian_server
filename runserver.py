@@ -20,7 +20,8 @@ def add_source():
 # get songs from user_id
 @app.route('/getsongs/<userID>', methods=['GET'])
 def get_songs(userID):
-    return db.get_user_songs(userID)
+    # return db.get_user_songs(userID)
+    return db.get_user_songs("1")
 
 if __name__ == '__main__':
     app.run(debug=True)

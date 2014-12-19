@@ -133,19 +133,22 @@ def add_song_to_source(song_data,source_id):
     # Retrieve the source by source_id
     result = SOURCES.find({"_id": source_id})
     if result.count() == 0:
-        print "SOURCE:",source_id,"not found, unable to add song:",song
-        return False
+        print "DB: ",source_id,"not found, unable to add song:",song
+        return
 
     source_songs = result[0]["songs"]
     print source_songs,"SOURCE SONGS"
     for i in source_songs:
         if i["stream_url"] == song["stream_url"]:
-            print "Song already exists in specified source, skipping."
+            print "DB: Song already exists in specified source, skipping."
             return
 
     source_songs.append(song)
     query = {"songs":source_songs}
-    SOURCES.update({'_id':ObjectId(source_id)},{"$set":query},upsert=False)
+    if SOURCES.update({'_id':ObjectId(source_id)},{"$set":query},upsert=False):
+        return True
+    else:
+        print "DB: Unable to add song:",song_data.get("_id"),"to source:",source_id
 
 def list_sources():
     """
@@ -154,5 +157,8 @@ def list_sources():
     return list(SOURCES.find())
 
 def add_source_to_db(source_url, rss_url="", songs=[]):
-    return SOURCES.insert({"source_url": source_url, "rss_url":rss_url, "songs": songs})
+    if SOURCES.insert({"source_url": source_url, "rss_url":rss_url, "songs": songs}):
+        return True
+    else:
+        print "Unable to add source url:",source_url,"to db"
 
