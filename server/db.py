@@ -117,15 +117,10 @@ def get_source_by_id(source_id):
 def add_song_to_source(song_data,source_id):
     """
     Song is a dictionary returned from the scraper. Song is added if does
-    not already exist in the db under the specified stream_url.
+    not already exist in the db under the specified streamURL.
     """
-    user = song_data.get("user")
-    opt_fields = ["_id","title", "genre", "stream_url", "artwork_url", "created_at"]
+    opt_fields = ["_id","title", "genre", "streamURL", "artworkURL", "date","artist"]
     song = {k: song_data.get(k) for k in opt_fields}
-    if user:
-        username = user.get('username')
-        if username:
-            song["username"] = username
 
     # add the source_id to the song
     song["source_id"] = ObjectId(source_id)
@@ -139,7 +134,7 @@ def add_song_to_source(song_data,source_id):
     source_songs = result[0]["songs"]
     print source_songs,"SOURCE SONGS"
     for i in source_songs:
-        if i["stream_url"] == song["stream_url"]:
+        if i["streamURL"] == song["streamURL"]:
             print "DB: Song already exists in specified source, skipping."
             return
 

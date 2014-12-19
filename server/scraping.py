@@ -154,7 +154,12 @@ def modifySoundCloudObject(song):
 	streamUrl = song.get("stream_url")
 	if not streamUrl:
 		return None
-	song["stream_url"] = streamUrl+"?client_id="+CLIENT_ID
+	song["streamURL"] = streamUrl+"?client_id="+CLIENT_ID
+
+	# Add new duplicate fields with different names for Phil
+	song["artworkURL"] = song.get("artwork_url") 
+	song["artist"] = song.get("title") 
+	song["date"] = song.get("created_at") 
 
 	# Generate unique id for the song
 	song["_id"] = str(uuid.uuid4())[0:8]
