@@ -16,63 +16,73 @@ def get_user(user_id):
     user = USERS.find({"user_id":user_id})
     if user.count() != 0:
         return user
+    else:
+        print "DB: Unable to get user:",user_id,",does not exist."
 
 def add_user(user_id):
     """
-    Adds a user if the user does not already exist
+    Adds a user if the user does not already exist.
     """
     if not get_user(user_id):
-        print USERS.insert({"user_id":user_id,"sources":[]})
+        if USERS.insert({"user_id":user_id,"sources":[]}):
+            return True
     else:
-        print "User already exists, not adding."
+        print "DB: User already exists, not adding."
 
 def remove_user(user_id):
     if get_user(user_id):
-        print USERS.remove({"user_id":user_id})
+        if USERS.remove({"user_id":user_id}):
+            return True
     else:
-        print "Cannot remove user",user_id,"does not exist."
+        print "DB: Cannot remove user",user_id,"does not exist."
 
 def add_source_to_user(source_id,user_id):
     user = get_user(user_id)
     if not user:
-        print "No user, can't add source to user."
+        print "DB: No user, can't add source:",source_id,"to user:",user_id
+        return
     sources = user[0]["sources"]
     sources.append(source_id)
     query = {"sources":sources}
-    print USERS.update({'user_id':user_id},{"$set":query},upsert=False)
+    if USERS.update({'user_id':user_id},{"$set":query},upsert=False):
+        return True
+    else:
+        print "DB: failed to add source:",source_id,"to user:",user_id
 
 
 def remove_source_from_user(source_id,user_id):
     user = get_user(user_id)
     if not user:
-        print "No user, can't remove source from user."
+        print "DB: No user, can't remove source:",source_id,"from user:",user_id
         return
 
     sources = user[0]["sources"]
     if source_id in sources:
         source_id.remove(source_id)
         query = {"sources":sources}
-        print USERS.update({'user_id':user_id},{"$set":query},upsert=False)
+        if USERS.update({'user_id':user_id},{"$set":query},upsert=False):
+            return True
+        else:
+            print "DB: Could not remove source:",source_id,"from user:",user_id
     else:
-        print "source_id not in user_id!"
+        print "DB: source_id:",source_id,"not in user_id:",user_id
 
 def format_song(song):
     """
     Replaces the source_id mongo object with a 
     string version of the object. 
     """
-    print song["source_id"]
     song["source_id"] = str(song["source_id"])
     return song
 
 def get_user_songs(user_id):
     user = get_user(user_id)
     if not user:
-        print "No user, can't get source from user."
-        return "No such user: " + str(user_id)
+        print "DB: No user, can't get source from user."
+        return "DB: No such user:",user_id
     sources = user[0]["sources"]
     if not sources:
-        print "No sources, nothing to return"
+        print "DB: No sources for user:",user_id,"no songs to return."
         return {}
 
     #otherwise, aggregate all songs over all the sources
