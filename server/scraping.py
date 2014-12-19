@@ -17,6 +17,9 @@ import db
 # curl with resolve, the link, and client_id
 # curl 'http://api.soundcloud.com/resolve.json?url=https://soundcloud.com/echocell/babylon-kraddy-remix-1&client_id=a9c272921e809f861f1951ea6ff1f829'
 
+CLIENT_ID = "a9c272921e809f861f1951ea6ff1f829"
+CLIENT_SECRET = "6d4cea605ed5e4c48bec8a48ef545310"
+
 def scrape_source(data):
 	source_url = data[0]
 	source_id = data[1]
@@ -34,10 +37,6 @@ def scrape_source(data):
 		db.add_song_to_source(i,source_id)
 		print "ADDED TO DB"
 	print source_id
-
-
-
-
 	return 0
 
 def getRSS(blogUrl):
@@ -105,7 +104,7 @@ def isPassed(item):
 def requestTrack(track_id):
 	try:
 		req = urllib2.urlopen("http://api.soundcloud.com/tracks/"+
-							str(track_id)+".json?client_id="+"a9c272921e809f861f1951ea6ff1f829")
+							str(track_id)+".json?client_id="+CLIENT_ID)
 	except:
 		e = sys.exc_info()[0]
 		# print "Failed to fetch",e
@@ -135,7 +134,7 @@ def fromEmbedded(link):
 
 def fromStandard(link):
 	try:
-		req = urllib2.urlopen("http://api.soundcloud.com/resolve.json?url="+link+"&"+"client_id=a9c272921e809f861f1951ea6ff1f829")
+		req = urllib2.urlopen("http://api.soundcloud.com/resolve.json?url="+link+"&"+"client_id="+CLIENT_ID)
 	except:
 		e = sys.exc_info()[0]
 		# print "Failed to fetch fromStandard",link,e
@@ -148,6 +147,13 @@ def fromStandard(link):
 		# print "FAIL:",link
 		pass
 	return data
+
+def addClientIDToStreamURL(song):
+	streamUrl = song.get("stream_url")
+	if not streamUrl:
+		return None
+	song["stream_url"] = streamUrl+"?client_id="+CLIENT_ID
+	return song
 
 def getSoundCloudLinks(items):
 	# gets the data of each link in each item
@@ -172,7 +178,11 @@ def getSoundCloudLinks(items):
 
 			# keep data unique in case multiple copies are matched
 			if data not in link_data:
-				link_data.append(data)
+				streamable = addClientIDToStreamURL(data)
+				if not streamable:
+					print "OH MY GOD NO STREAM URL WHAT DO"
+					continue
+				link_data.append(streamable)
 			else:
 				# print "Duplicate track",data['id'],data['title']
 				pass
@@ -185,7 +195,11 @@ def getSoundCloudLinks(items):
 			if data == None:
 				continue
 			if data not in link_data:
-				link_data.append(data)
+				streamable = addClientIDToStreamURL(data)
+				if not streamable:
+					print "OH MY GOD NO STREAM URL WHAT DO"
+					continue
+				link_data.append(streamable)
 			# else:
 			# 	print "Duplicate track",data['id'],data['title']
 
