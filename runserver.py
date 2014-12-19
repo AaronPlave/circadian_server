@@ -1,3 +1,4 @@
+import json
 from flask import Flask,request
 from server import sources, db
 app = Flask(__name__)
@@ -21,7 +22,9 @@ def add_source():
 @app.route('/getsongs/<userID>', methods=['GET'])
 def get_songs(userID):
     # return db.get_user_songs(userID)
-    return db.get_user_songs("1")
+    songs = db.get_user_songs("1")
+    data = {'songs':songs}
+    return json.dumps(data)
 
 if __name__ == '__main__':
     app.run(debug=True)

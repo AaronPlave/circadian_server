@@ -94,8 +94,8 @@ def get_user_songs(user_id):
     flatten = [format_song(song) for source in songs for song in source]
 
     #dump using bson/json to string
-    dumped = json.dumps(flatten)
-    return dumped
+    # dumped = json.dumps(flatten)
+    return flatten
 
 
 def get_source_by_url(source_url):
