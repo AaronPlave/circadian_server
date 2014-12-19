@@ -2,13 +2,13 @@ import urllib2
 import re
 import sys
 import json
-from datetime import datetime
 import db
+import uuid
+from datetime import datetime
 
 # id:"a9c272921e809f861f1951ea6ff1f829"
 # secret:@"6d4cea605ed5e4c48bec8a48ef545310"
                   
-
 #     [SCSoundCloud setClientID:@"a9c272921e809f861f1951ea6ff1f829"
 #      secret:@"6d4cea605ed5e4c48bec8a48ef545310"
 # redirectURL:[NSURL URLWithString:@"Circadian://oauth"]];
@@ -148,11 +148,15 @@ def fromStandard(link):
 		pass
 	return data
 
-def addClientIDToStreamURL(song):
+def modifySoundCloudObject(song):
+	# Modify stream_url to include CLIENT_ID
 	streamUrl = song.get("stream_url")
 	if not streamUrl:
 		return None
 	song["stream_url"] = streamUrl+"?client_id="+CLIENT_ID
+
+	# Generate unique id for the song
+	song["_id"] = str(uuid.uuid4())[0:8]
 	return song
 
 def getSoundCloudLinks(items):
@@ -178,7 +182,7 @@ def getSoundCloudLinks(items):
 
 			# keep data unique in case multiple copies are matched
 			if data not in link_data:
-				streamable = addClientIDToStreamURL(data)
+				streamable = modifySoundCloudObject(data)
 				if not streamable:
 					print "OH MY GOD NO STREAM URL WHAT DO"
 					continue
@@ -195,7 +199,7 @@ def getSoundCloudLinks(items):
 			if data == None:
 				continue
 			if data not in link_data:
-				streamable = addClientIDToStreamURL(data)
+				streamable = modifySoundCloudObject(data)
 				if not streamable:
 					print "OH MY GOD NO STREAM URL WHAT DO"
 					continue

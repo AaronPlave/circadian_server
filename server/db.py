@@ -1,7 +1,7 @@
 import pymongo
 import os
 from bson.objectid import ObjectId
-from bson.json_util import dumps
+import json
 
 MONGO_URI = os.environ.get('MONGOLAB_URI')
 if not MONGO_URI:
@@ -56,6 +56,14 @@ def remove_source_from_user(source_id,user_id):
     else:
         print "source_id not in user_id!"
 
+def format_song(song):
+    """
+    Replaces the source_id mongo object with a 
+    string version of the object. 
+    """
+    print song["source_id"]
+    song["source_id"] = str(song["source_id"])
+    return song
 
 def get_user_songs(user_id):
     user = get_user(user_id)
@@ -68,17 +76,17 @@ def get_user_songs(user_id):
         return {}
 
     #otherwise, aggregate all songs over all the sources
-    print sources, "USER",user_id,"'s sources"
+    # print sources, "USER",user_id,"'s sources"
     songs = []
     for s in sources:
         source_obj =  SOURCES.find({"_id":s})[0]
         songs.append(source_obj["songs"])
 
     #flatten lists
-    flatten = [song for source in songs for song in source]
+    flatten = [format_song(song) for source in songs for song in source]
 
     #dump using bson/json to string
-    dumped = dumps(flatten)
+    dumped = json.dumps(flatten)
     return dumped
 
 
@@ -104,7 +112,7 @@ def add_song_to_source(song_data,source_id):
     not already exist in the db under the specified stream_url.
     """
     user = song_data.get("user")
-    opt_fields = ["title", "genre", "stream_url", "artwork_url", "created_at"]
+    opt_fields = ["_id","title", "genre", "stream_url", "artwork_url", "created_at"]
     song = {k: song_data.get(k) for k in opt_fields}
     if user:
         username = user.get('username')
