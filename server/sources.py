@@ -86,3 +86,4 @@ def test():
     
     print "TEST: getting user's songs"
     return db.get_user_songs("1")
+    print "TEST: DONE!"

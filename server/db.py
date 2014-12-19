@@ -34,43 +34,43 @@ def remove_user(user_id):
     else:
         print "DB: Cannot remove user",user_id,"does not exist."
 
-def add_source_to_user(source_id,user_id):
+def add_source_to_user(sourceID,user_id):
     user = get_user(user_id)
     if not user:
-        print "DB: No user, can't add source:",source_id,"to user:",user_id
+        print "DB: No user, can't add source:",sourceID,"to user:",user_id
         return
     sources = user[0]["sources"]
-    sources.append(source_id)
+    sources.append(sourceID)
     query = {"sources":sources}
     if USERS.update({'user_id':user_id},{"$set":query},upsert=False):
         return True
     else:
-        print "DB: failed to add source:",source_id,"to user:",user_id
+        print "DB: failed to add source:",sourceID,"to user:",user_id
 
 
-def remove_source_from_user(source_id,user_id):
+def remove_source_from_user(sourceID,user_id):
     user = get_user(user_id)
     if not user:
-        print "DB: No user, can't remove source:",source_id,"from user:",user_id
+        print "DB: No user, can't remove source:",sourceID,"from user:",user_id
         return
 
     sources = user[0]["sources"]
-    if source_id in sources:
-        source_id.remove(source_id)
+    if sourceID in sources:
+        sourceID.remove(sourceID)
         query = {"sources":sources}
         if USERS.update({'user_id':user_id},{"$set":query},upsert=False):
             return True
         else:
-            print "DB: Could not remove source:",source_id,"from user:",user_id
+            print "DB: Could not remove source:",sourceID,"from user:",user_id
     else:
-        print "DB: source_id:",source_id,"not in user_id:",user_id
+        print "DB: sourceID:",sourceID,"not in user_id:",user_id
 
 def format_song(song):
     """
-    Replaces the source_id mongo object with a 
+    Replaces the sourceID mongo object with a 
     string version of the object. 
     """
-    song["source_id"] = str(song["source_id"])
+    song["sourceID"] = str(song["sourceID"])
     return song
 
 def get_user_songs(user_id):
@@ -93,8 +93,6 @@ def get_user_songs(user_id):
     #flatten lists
     flatten = [format_song(song) for source in songs for song in source]
 
-    #dump using bson/json to string
-    # dumped = json.dumps(flatten)
     return flatten
 
 
@@ -108,13 +106,13 @@ def get_source_by_url(source_url):
         return result
 
 
-def get_source_by_id(source_id):
+def get_source_by_id(sourceID):
     """
-    Returns the MongoObject with id == source_id if one exists.
+    Returns the MongoObject with id == sourceID if one exists.
     """
     pass
 
-def add_song_to_source(song_data,source_id):
+def add_song_to_source(song_data,sourceID):
     """
     Song is a dictionary returned from the scraper. Song is added if does
     not already exist in the db under the specified streamURL.
@@ -122,13 +120,13 @@ def add_song_to_source(song_data,source_id):
     opt_fields = ["_id","title", "genre", "streamURL", "artworkURL", "date","artist"]
     song = {k: song_data.get(k) for k in opt_fields}
 
-    # add the source_id to the song
-    song["source_id"] = ObjectId(source_id)
+    # add the sourceID to the song
+    song["sourceID"] = ObjectId(sourceID)
 
-    # Retrieve the source by source_id
-    result = SOURCES.find({"_id": source_id})
+    # Retrieve the source by sourceID
+    result = SOURCES.find({"_id": sourceID})
     if result.count() == 0:
-        print "DB: ",source_id,"not found, unable to add song:",song
+        print "DB: ",sourceID,"not found, unable to add song:",song
         return
 
     source_songs = result[0]["songs"]
@@ -140,10 +138,10 @@ def add_song_to_source(song_data,source_id):
 
     source_songs.append(song)
     query = {"songs":source_songs}
-    if SOURCES.update({'_id':ObjectId(source_id)},{"$set":query},upsert=False):
+    if SOURCES.update({'_id':ObjectId(sourceID)},{"$set":query},upsert=False):
         return True
     else:
-        print "DB: Unable to add song:",song_data.get("_id"),"to source:",source_id
+        print "DB: Unable to add song:",song_data.get("_id"),"to source:",sourceID
 
 def list_sources():
     """

@@ -22,9 +22,9 @@ CLIENT_SECRET = "6d4cea605ed5e4c48bec8a48ef545310"
 
 def scrape_source(data):
 	source_url = data[0]
-	source_id = data[1]
+	sourceID = data[1]
 	rss_url = data[2]
-	print source_url,source_id,rss_url
+	print source_url,sourceID,rss_url
 
 	if not rss_url:
 		rss_url = getRSS(source_url)
@@ -33,10 +33,10 @@ def scrape_source(data):
 
 	results = getMusicFromRSS(rss_url)
 	for i in results:
-		print "ADDING",source_id, "to db"
-		db.add_song_to_source(i,source_id)
+		print "ADDING",sourceID, "to db"
+		db.add_song_to_source(i,sourceID)
 		print "ADDED TO DB"
-	print source_id
+	print sourceID
 	return 0
 
 def getRSS(blogUrl):

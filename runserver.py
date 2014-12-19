@@ -10,13 +10,15 @@ def hello():
 ####$$$$$$ TEST ####$$$$$$$
 @app.route('/test2')
 def test2():
-	return sources.test()
+	songs = sources.test()
+	data = {'songs':songs}
+	return json.dumps(data)
 ################$$$$$$$$$$$
 
 # add source
 @app.route('/add', methods=['GET'])
 def add_source():
-    return sources.add_source(request.args.get("sourceID"),request.args.get("userID"))
+    sources.add_source(request.args.get("sourceID"),request.args.get("userID"))
 
 # get songs from user_id
 @app.route('/getsongs/<userID>', methods=['GET'])
