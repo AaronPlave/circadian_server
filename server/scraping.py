@@ -79,6 +79,7 @@ urls = ['http://thissongissick.com/blog/feed/', 'http://www.edmsauce.com/feed/',
 
 def isPassed(item):
 	# print item
+	TIME_DELTA = 48
 	# true if item time < 24 from now, else false
 	pattern = re.compile(r'<(pubDate|lastBuildDate)>[A-Z]{1}[a-z]{2}, [0-9]{2} [A-Z]{1}[a-z]{2} \d+ \d+:\d+:\d+ \+\d+</(pubDate|lastBuildDate)>')	
 	result = pattern.search(item)
@@ -98,8 +99,8 @@ def isPassed(item):
 	item_time = datetime.strptime(match, '%a %d %b %Y %H:%M:%S')
 	current_time = datetime.now()
 	delta = current_time - item_time
-	hours = (24*delta.days)+(delta.seconds/60.0/60.0)
-	return hours < 24
+	hours = (TIME_DELTA*delta.days)+(delta.seconds/60.0/60.0)
+	return hours < TIME_DELTA
 
 def requestTrack(track_id):
 	try:

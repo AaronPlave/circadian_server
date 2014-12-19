@@ -63,8 +63,8 @@ def test():
     print "TEST: refreshing sources"
     refresh_sources()
 
-    print "TEST: sleeping for 4 to wait..."
-    time.sleep(4)
+    # print "TEST: sleeping for 4 to wait..."
+    # time.sleep(4)
 
     print "TEST: adding user '1' "
     db.add_user("1")
@@ -77,15 +77,12 @@ def test():
     
     #add a source to user
     s = db.list_sources()[0]["_id"]
-    print s,"source to add" 
+    print "TEST:",s,"source to add" 
     print "TEST: adding a source to user '1' "
     db.add_source_to_user(s,"1")
 
     print "TEST: verifying user has that source"
-    print "User has source:",s in db.get_user("1")[0]["sources"]
-
+    print "TEST: User has source:",s in db.get_user("1")[0]["sources"]
     
     print "TEST: getting user's songs"
     return db.get_user_songs("1")
-
-# test()

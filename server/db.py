@@ -16,8 +16,6 @@ def get_user(user_id):
     user = USERS.find({"user_id":user_id})
     if user.count() != 0:
         return user
-    else:
-        print "DB: Unable to get user:",user_id,",does not exist."
 
 def add_user(user_id):
     """
