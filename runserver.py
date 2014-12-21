@@ -3,6 +3,9 @@ from flask import Flask,request
 from server import sources, db
 app = Flask(__name__)
 
+def format_songs(songs):
+    return {'songs':songs}
+
 @app.route('/')
 def hello():
     return "ALIVE"
@@ -10,23 +13,35 @@ def hello():
 ####$$$$$$ TEST ####$$$$$$$
 @app.route('/test2')
 def test2():
-	songs = sources.test()
-	data = {'songs':songs}
-	return json.dumps(data)
-################$$$$$$$$$$$
+    songs = format_songs(sources.test())
+    return json.dumps(songs)
+##################
 
+@app.route('/add/user/<userID>', methods=['GET'])
+def add_user(userID):
+    s = False
+    if db.add_user(userID):
+        s = True
+    return json.dumps({"ADD":s})
+    
 # add source
-@app.route('/add', methods=['GET'])
+@app.route('/add/source', methods=['GET'])
 def add_source():
-    sources.add_source(request.args.get("sourceID"),request.args.get("userID"))
+    sourceURL = request.args.get("sourceURL")
+    userID = request.args.get("userID")
+    songs = sources.add_source(sourceURL,userID)
+    if songs:
+        return json.dumps(format_songs(songs))
+    else:
+        return json.dumps({"error":"Unable to add source: "+sourceURL})
 
 # get songs from user_id
-@app.route('/getsongs/<userID>', methods=['GET'])
+@app.route('/get/songs/<userID>', methods=['GET'])
 def get_songs(userID):
-    # return db.get_user_songs(userID)
     songs = db.get_user_songs("1")
-    data = {'songs':songs}
-    return json.dumps(data)
+    return json.dumps(format_songs(songs))
 
 if __name__ == '__main__':
+    sources.refresh_handler()
     app.run(debug=True)
+

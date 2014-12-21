@@ -20,24 +20,43 @@ from datetime import datetime
 CLIENT_ID = "a9c272921e809f861f1951ea6ff1f829"
 CLIENT_SECRET = "6d4cea605ed5e4c48bec8a48ef545310"
 
-def scrape_source(data):
+def scrape_new_source(data):
+	source_url = data[0]
+	user_id = data[1]
+	# if we can get an RSS link out of the blog, we can in 
+	# theory scrape it (plus, we don't have a way of knowing 
+	# if the blog will successfully yield songs since these blogs
+	# have highly variable soundcloud link yields to begin with.
+	rss_url = getRSS(source_url)
+	if not rss_url:
+		return
+
+	# got an RSS so add the source to the db
+	sourceID = db.add_source_to_db(source_url=source_url,rss_url=rss_url)
+	
+	# add source to user
+	if not db.add_source_to_user(sourceID, user_id):
+		return
+
+	# fetch songs from source
+	results = getMusicFromRSS(rss_url)
+	for i in results:
+		db.add_song_to_source(i,sourceID)
+
+	return True
+
+def scrape_current_source(data):
 	source_url = data[0]
 	sourceID = data[1]
-	rss_url = data[2]
-	print source_url,sourceID,rss_url
 
+	rss_url = getRSS(source_url)
 	if not rss_url:
-		rss_url = getRSS(source_url)
-		if not rss_url:
-			return 1
+		return
 
 	results = getMusicFromRSS(rss_url)
 	for i in results:
-		print "ADDING",sourceID, "to db"
 		db.add_song_to_source(i,sourceID)
-		print "ADDED TO DB"
-	print sourceID
-	return 0
+	return True
 
 def getRSS(blogUrl):
 	try:
@@ -51,12 +70,12 @@ def getRSS(blogUrl):
 		match = result.group(0)
 
 		# get the url
-		urlPattern = re.compile(r'href=".*"')
+		urlPattern = re.compile(r'href=".*?"')
 		result2 = urlPattern.search(match)
 		match2 = result2.group(0)
 		final = match2.split("=")[1]
 		final = final[1:len(final)-1]
-		# print "success!",final
+		print "success!",final
 		return final
 	except:
 		e = sys.exc_info()[0]
@@ -64,7 +83,7 @@ def getRSS(blogUrl):
 		return
 
 # MUST BE IN HTTP NOT WWW
-blogs = ["http://thissongissick.com/blog/#sthash.4oplcVTM.dpbs",
+blogs = ["http://thissongissick.com/",
 		"http://eqmusicblog.com/",'http://gorillavsbear.net',
 		'http://abeano.com','http://potholesinmyblog.com',
 		'http://prettymuchamazing.com','http://disconaivete.com',

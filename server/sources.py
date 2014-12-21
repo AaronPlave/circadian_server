@@ -7,36 +7,41 @@ Adding Source Steps:
     failure.
 """
 
-import time
 import db
-from bson.json_util import dumps
+import time
 import multiprocessing
 import scraping
 
-some_queue = ["?"]
-
 def add_source(source_url,user_id):
-    # THIS IS NOT FUNCTIONING ANY DIFFERENTLY FROM
-    # OTHER SOURCES AT THE MOMENT.. SHOULD JUST SCRAPE THAT
-    # ONE SOURCE!
     result = db.get_source_by_url(source_url)
     if result:
-        return dumps(result)
-    # else add and trigger a scrape
-    db.add_source_to_db(source_url)
-    refresh_sources()
+        return db.format_songs(result[0]["songs"])
+    # else scrape the source and if successful add source and songs
+    # to db and add the source to the user.
+    pool = multiprocessing.Pool(1)
+    success = pool.map(scraping.scrape_new_source,[[source_url,user_id]])
+    if success[0]:
+        return db.get_source_by_url(source_url)[0]["songs"]
+
+def refresh_handler():
+    print "Starting source refresh process"
+    pool = multiprocessing.Pool(1)
+    pool.map_async(refresh_sources,())
 
 def refresh_sources():
+    SLEEP_TIME = 10 #sleep 10 seconds
+
     sources = db.SOURCES.find()
     if sources.count() == 0:
-        print "No sources, nothing to scrape."
-        return
+        print "REFRESHER: NO SOURCES FOUND, WAITING"
+        time.sleep(SLEEP_TIME)
+        refresh_sources()
+    print "REFRESHER: SCRAPING SONGS"
     sources_to_scrape = [(i["source_url"],i["_id"],i["rss_url"]) for i in sources]
-    print sources_to_scrape
-    count = multiprocessing.cpu_count()
-    pool = multiprocessing.Pool(count)
-    output = pool.map(scraping.scrape_source,sources_to_scrape)
-    print output
+    [scraping.scrape_current_source(i) for i in sources_to_scrape]
+    print "REFRESHER: SCRAPED SOURCES"
+    time.sleep(SLEEP_TIME)
+    refresh_sources()
 
 def test():
     """
@@ -50,40 +55,36 @@ def test():
     print "TEST: dropping users"
     db.USERS.drop()
 
-    # Add source
-    blogs = ["http://thissongissick.com/blog/#sthash.4oplcVTM.dpbs",
-        "http://eqmusicblog.com/",'http://gorillavsbear.net',
-        'http://abeano.com','http://potholesinmyblog.com',
-        'http://prettymuchamazing.com','http://disconaivete.com',
-        'http://doandroidsdance.com','http://www.npr.org/blogs/allsongs/',
-        'http://blogs.kcrw.com/musicnews/']
-    print "TEST: adding sources to db"
-    [db.add_source_to_db(i) for i in blogs[0:1]]
-
-    print "TEST: refreshing sources"
-    refresh_sources()
-
-    # print "TEST: sleeping for 4 to wait..."
-    # time.sleep(4)
-
     print "TEST: adding user '1' "
     db.add_user("1")
-
+    
     print "TEST: verifying user 1 is in db"
     if not db.get_user("1"):
         print "TEST: No user '1' found"
         return False
     print "TEST: found user 1"
+
+    # Add source
+    blogs = ["http://thissongissick.com",
+        "http://eqmusicblog.com",'http://gorillavsbear.net',
+        'http://abeano.com','http://potholesinmyblog.com',
+        'http://prettymuchamazing.com','http://disconaivete.com',
+        'http://doandroidsdance.com','http://www.npr.org/blogs/allsongs/',
+        'http://blogs.kcrw.com/musicnews/']
+
+    print "TEST: scraping sources"
+    [add_source(i,"1") for i in blogs[0:2]]
+
+
     
-    #add a source to user
+    # #add a source to user
     s = db.list_sources()[0]["_id"]
-    print "TEST:",s,"source to add" 
-    print "TEST: adding a source to user '1' "
-    db.add_source_to_user(s,"1")
+    # print "TEST:",s,"source to add" 
+    # print "TEST: adding a source to user '1' "
+    # db.add_source_to_user(s,"1")
 
     print "TEST: verifying user has that source"
     print "TEST: User has source:",s in db.get_user("1")[0]["sources"]
     
     print "TEST: getting user's songs"
     return db.get_user_songs("1")
-    print "TEST: DONE!"

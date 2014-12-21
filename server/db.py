@@ -1,7 +1,6 @@
 import pymongo
 import os
 from bson.objectid import ObjectId
-import json
 
 MONGO_URI = os.environ.get('MONGOLAB_URI')
 if not MONGO_URI:
@@ -65,6 +64,14 @@ def remove_source_from_user(sourceID,user_id):
     else:
         print "DB: sourceID:",sourceID,"not in user_id:",user_id
 
+def remove_all_sources():
+    SOURCES.drop()
+    if SOURCES.count() == 0:
+        return True
+    else:
+        print "Unable to remove all sources"
+
+
 def format_song(song):
     """
     Replaces the sourceID mongo object with a 
@@ -72,6 +79,9 @@ def format_song(song):
     """
     song["sourceID"] = str(song["sourceID"])
     return song
+
+def format_songs(songs):
+    return [format_song(s) for s in songs]
 
 def get_user_songs(user_id):
     user = get_user(user_id)
@@ -110,7 +120,9 @@ def get_source_by_id(sourceID):
     """
     Returns the MongoObject with id == sourceID if one exists.
     """
-    pass
+    result = SOURCES.find({"_id": sourceID})
+    if result.count() != 0:
+        return result
 
 def add_song_to_source(song_data,sourceID):
     """
@@ -130,7 +142,6 @@ def add_song_to_source(song_data,sourceID):
         return
 
     source_songs = result[0]["songs"]
-    print source_songs,"SOURCE SONGS"
     for i in source_songs:
         if i["streamURL"] == song["streamURL"]:
             print "DB: Song already exists in specified source, skipping."
@@ -150,8 +161,9 @@ def list_sources():
     return list(SOURCES.find())
 
 def add_source_to_db(source_url, rss_url="", songs=[]):
-    if SOURCES.insert({"source_url": source_url, "rss_url":rss_url, "songs": songs}):
-        return True
+    source = SOURCES.insert({"source_url": source_url, "rss_url":rss_url, "songs": songs})
+    if source:
+        return source
     else:
         print "Unable to add source url:",source_url,"to db"
 

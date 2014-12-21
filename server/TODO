@@ -1,0 +1,14 @@
+-save the RSS url for each source after it's determined and use later to skip the getRSS step.
+-add a last updated field for each source
+-create some sort of subscriber count. a few options here:
+	-Create a dict of sources, count number of occurences of each source over
+		all the users.
+	-Do the previous thing but keep it stored in the db or in memory somewhere and
+	 	have methods to update it instead of recreating each time. Might avoid the cost of above method.
+	-Instead of just a subscriber count, potentially store subscribed users in 		
+		their sources. Do this relationally? Or just store the info. In any case,
+		this would give both a count of the users for each source AND a potential
+		way to do recommendations. E.g. to get recommendations for a user, we see what
+		sources they subscribe to and do some metric to figure out what other people
+		subscribed to that source are subscribed to (aggregate of all of those, take
+		the top ones, or something)
