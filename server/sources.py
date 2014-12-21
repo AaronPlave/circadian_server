@@ -15,14 +15,16 @@ import scraping
 def add_source(source_url,user_id):
     result = db.get_source_by_url(source_url)
     if result:
-        return db.format_ids(result[0]["songs"])
+        songs = db.format_ids(result[0]["songs"])
+        return [True,songs]
     # else scrape the source and if successful add source and songs
     # to db and add the source to the user.
     pool = multiprocessing.Pool(1)
     success = pool.map(scraping.scrape_new_source,[[source_url,user_id]])
     if success[0]:
-        return db.get_source_by_url(source_url)[0]["songs"]
-
+        return [True,db.get_source_by_url(source_url)[0]["songs"]]
+    else:
+        return [False,[]]
 
 def refresh_sources(x):
     SLEEP_TIME = 1*60 #sleep 10 seconds
@@ -76,7 +78,7 @@ def test():
         'http://abeano.com','http://potholesinmyblog.com',
         'http://prettymuchamazing.com','http://disconaivete.com',
         'http://doandroidsdance.com','http://www.npr.org/blogs/allsongs/',
-        'http://blogs.kcrw.com/musicnews/']
+        'http://blogs.kcrw.com/musicnews/',"http://www.edmsauce.com"]
 
     # blogs = ["http://www.npr.org/blogs/allsongs/"]
 

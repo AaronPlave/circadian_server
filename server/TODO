@@ -12,3 +12,4 @@
 		sources they subscribe to and do some metric to figure out what other people
 		subscribed to that source are subscribed to (aggregate of all of those, take
 		the top ones, or something)
+-route to list sources

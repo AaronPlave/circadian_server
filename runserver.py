@@ -30,8 +30,8 @@ def add_source():
     sourceURL = request.args.get("sourceURL")
     userID = request.args.get("userID")
     songs = sources.add_source(sourceURL,userID)
-    if songs:
-        return json.dumps(format_songs(songs))
+    if songs[0]:
+        return json.dumps(format_songs(songs[1]))
     else:
         return json.dumps({"error":"Unable to add source: "+sourceURL})
 
@@ -51,7 +51,7 @@ def get_status():
 def startscraping():
     sources.refresh_handler()
     return "scraping"
-    
+
 if __name__ == '__main__':
     app.run(debug=True)
 
