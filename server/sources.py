@@ -15,7 +15,7 @@ import scraping
 def add_source(source_url,user_id):
     result = db.get_source_by_url(source_url)
     if result:
-        return db.format_songs(result[0]["songs"])
+        return db.format_ids(result[0]["songs"])
     # else scrape the source and if successful add source and songs
     # to db and add the source to the user.
     pool = multiprocessing.Pool(1)
@@ -23,15 +23,11 @@ def add_source(source_url,user_id):
     if success[0]:
         return db.get_source_by_url(source_url)[0]["songs"]
 
-def refresh_handler():
-    print "Starting source refresh process"
-    pool = multiprocessing.Pool(1)
-    pool.map_async(refresh_sources,())
 
-def refresh_sources():
-    SLEEP_TIME = 10 #sleep 10 seconds
-
+def refresh_sources(x):
+    SLEEP_TIME = 1*60 #sleep 10 seconds
     sources = db.SOURCES.find()
+
     if sources.count() == 0:
         print "REFRESHER: NO SOURCES FOUND, WAITING"
         time.sleep(SLEEP_TIME)
@@ -42,6 +38,16 @@ def refresh_sources():
     print "REFRESHER: SCRAPED SOURCES"
     time.sleep(SLEEP_TIME)
     refresh_sources()
+
+def foo(x):
+    print x 
+    time.sleep(3)
+    foo(x)
+
+def refresh_handler():
+    print "Starting source refresh process"
+    pool = multiprocessing.Pool(1)
+    pool.map_async(refresh_sources,("0"))
 
 def test():
     """

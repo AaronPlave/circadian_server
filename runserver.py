@@ -23,7 +23,7 @@ def add_user(userID):
     if db.add_user(userID):
         s = True
     return json.dumps({"ADD":s})
-    
+
 # add source
 @app.route('/add/source', methods=['GET'])
 def add_source():
@@ -41,7 +41,17 @@ def get_songs(userID):
     songs = db.get_user_songs("1")
     return json.dumps(format_songs(songs))
 
-if __name__ == '__main__':
+# list all sources (sourceURL, sourceID, #songs, )
+@app.route('/get/status', methods=['GET'])
+def get_status():
+    print db.get_last_update_time()
+    return json.dumps(db.get_last_update_time())
+
+@app.route('/startscraping', methods=['GET'])
+def startscraping():
     sources.refresh_handler()
+    return "scraping"
+    
+if __name__ == '__main__':
     app.run(debug=True)
 

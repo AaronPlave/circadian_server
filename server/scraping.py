@@ -19,7 +19,7 @@ from datetime import datetime
 
 CLIENT_ID = "a9c272921e809f861f1951ea6ff1f829"
 CLIENT_SECRET = "6d4cea605ed5e4c48bec8a48ef545310"
-TIME_DELTA = 480
+TIME_DELTA = 1000
 
 def scrape_new_source(data):
 	source_url = data[0]
@@ -44,6 +44,8 @@ def scrape_new_source(data):
 	for i in results:
 		db.add_song_to_source(i,sourceID)
 
+	# Update last update time in status
+	db.set_last_update_time(datetime.now())
 	return True
 
 def scrape_current_source(data):
@@ -57,6 +59,9 @@ def scrape_current_source(data):
 	results = getMusicFromRSS(rss_url)
 	for i in results:
 		db.add_song_to_source(i,sourceID)
+
+	# Update last update time in status
+	db.set_last_update_time(datetime.now())
 	return True
 
 def getRSS(blogUrl):
@@ -191,7 +196,7 @@ def getSoundCloudLinks(items):
 	# patternEmbedded = re.compile(r'https://w.soundcloud.*?"')
 	# patternStandard = re.compile(r'https://soundcloud.*?"')
 	link_data = [] # list of data dictionaries for each link, unique
-	print "SEARCHING:",items,"FOR SC LINKS"
+	# print "SEARCHING:",items,"FOR SC LINKS"
 	for item in items:
 		result = pattern.search(item)
 		if result == None:
@@ -244,7 +249,7 @@ def getMusicFromRSS(RSS_URL):
 		raw = obj.read()
 	except:
 		e = sys.exc_info()[0]
-		print "Failed to fetch",RSS_URL,e
+		# print "Failed to fetch",RSS_URL,e
 		return
 
 	#MIGHT want to do a quick regex search for soundcloud to make 

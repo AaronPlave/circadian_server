@@ -10,6 +10,7 @@ client = pymongo.MongoClient(MONGO_URI)
 db = client.get_default_database()
 SOURCES = db["sources"]
 USERS = db["users"]
+STATUS = db["status"]
 
 def get_user(user_id):
     user = USERS.find({"user_id":user_id})
@@ -72,7 +73,7 @@ def remove_all_sources():
         print "Unable to remove all sources"
 
 
-def format_song(song):
+def format_id(song):
     """
     Replaces the sourceID mongo object with a 
     string version of the object. 
@@ -80,8 +81,8 @@ def format_song(song):
     song["sourceID"] = str(song["sourceID"])
     return song
 
-def format_songs(songs):
-    return [format_song(s) for s in songs]
+def format_ids(songs):
+    return [format_id(s) for s in songs]
 
 def get_user_songs(user_id):
     user = get_user(user_id)
@@ -101,7 +102,7 @@ def get_user_songs(user_id):
         songs.append(source_obj["songs"])
 
     #flatten lists
-    flatten = [format_song(song) for source in songs for song in source]
+    flatten = [format_id(song) for source in songs for song in source]
 
     return flatten
 
@@ -167,3 +168,17 @@ def add_source_to_db(source_url, rss_url="", songs=[]):
     else:
         print "Unable to add source url:",source_url,"to db"
 
+
+def get_last_update_time():
+    last_update = STATUS.find_one()
+    if last_update:
+        return last_update["update_time"].ctime()
+
+def set_last_update_time(update_time):
+    obj = STATUS.find_one()
+    if not obj:
+        if STATUS.insert({"update_time":update_time,}):
+            return True
+    query = {"update_time":update_time}
+    if STATUS.update({'_id':obj["_id"]},{"$set":query},upsert=False):
+        return True
