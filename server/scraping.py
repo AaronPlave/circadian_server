@@ -19,6 +19,7 @@ from datetime import datetime
 
 CLIENT_ID = "a9c272921e809f861f1951ea6ff1f829"
 CLIENT_SECRET = "6d4cea605ed5e4c48bec8a48ef545310"
+TIME_DELTA = 480
 
 def scrape_new_source(data):
 	source_url = data[0]
@@ -75,8 +76,10 @@ def getRSS(blogUrl):
 		match2 = result2.group(0)
 		final = match2.split("=")[1]
 		final = final[1:len(final)-1]
-		print "success!",final
-		return final
+
+		# if url does not begin with www or http or https reject
+		if "www" in final or "http" in final or "https" in final:
+			return final
 	except:
 		e = sys.exc_info()[0]
 		# print "ERROR",e
@@ -97,8 +100,6 @@ urls = ['http://thissongissick.com/blog/feed/', 'http://www.edmsauce.com/feed/',
 # print urls
 
 def isPassed(item):
-	# print item
-	TIME_DELTA = 48
 	# true if item time < 24 from now, else false
 	pattern = re.compile(r'<(pubDate|lastBuildDate)>[A-Z]{1}[a-z]{2}, [0-9]{2} [A-Z]{1}[a-z]{2} \d+ \d+:\d+:\d+ \+\d+</(pubDate|lastBuildDate)>')	
 	result = pattern.search(item)
@@ -190,11 +191,11 @@ def getSoundCloudLinks(items):
 	# patternEmbedded = re.compile(r'https://w.soundcloud.*?"')
 	# patternStandard = re.compile(r'https://soundcloud.*?"')
 	link_data = [] # list of data dictionaries for each link, unique
+	print "SEARCHING:",items,"FOR SC LINKS"
 	for item in items:
-		# print item
 		result = pattern.search(item)
 		if result == None:
-			# print "No soundcloud links found in this item"
+			print "No soundcloud links found in this item"
 			continue
 		link = result.group(0)
 		link = link.replace('"','')
@@ -243,11 +244,16 @@ def getMusicFromRSS(RSS_URL):
 		raw = obj.read()
 	except:
 		e = sys.exc_info()[0]
-		# print "Failed to fetch",RSS_URL,e
+		print "Failed to fetch",RSS_URL,e
 		return
 
 	#MIGHT want to do a quick regex search for soundcloud to make 
 	#sure there's at least one link in there?
+
+	# if from feedburner..
+	if "feedburner" in RSS_URL:
+		print "FROM FEEDBURNER"
+
 
 	# split by item
 	raw = raw.split("<item>")[1:]
@@ -264,6 +270,7 @@ def getMusicFromRSS(RSS_URL):
 			currentItems.append(l)
 
 	# scan for SC links and youtube links, SC currently returns data
+	print len(currentItems)
 	soundcloud_data = getSoundCloudLinks(currentItems)
 	# youtube_data = getYoutubeLinks(currentItems)
 

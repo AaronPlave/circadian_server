@@ -72,16 +72,24 @@ def test():
         'http://doandroidsdance.com','http://www.npr.org/blogs/allsongs/',
         'http://blogs.kcrw.com/musicnews/']
 
+    # blogs = ["http://www.npr.org/blogs/allsongs/"]
+
     print "TEST: scraping sources"
-    [add_source(i,"1") for i in blogs[0:2]]
+    results = [add_source(i,"1") for i in blogs]
+    print results,"rrr"
 
+    # stop test if no sources succeeded
+    cont = False
+    for i in results:
+        if i:
+            cont = True
+            continue 
+    if not cont:
+        "TEST: No sources succeeded, unable to continue test." 
+        return False
 
-    
-    # #add a source to user
+    # add a source to user
     s = db.list_sources()[0]["_id"]
-    # print "TEST:",s,"source to add" 
-    # print "TEST: adding a source to user '1' "
-    # db.add_source_to_user(s,"1")
 
     print "TEST: verifying user has that source"
     print "TEST: User has source:",s in db.get_user("1")[0]["sources"]
