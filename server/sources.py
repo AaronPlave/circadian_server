@@ -37,7 +37,7 @@ def refresh_sources(x):
     [scraping.scrape_current_source(i) for i in sources_to_scrape]
     print "REFRESHER: SCRAPED SOURCES"
     time.sleep(SLEEP_TIME)
-    refresh_sources()
+    refresh_sources(x)
 
 def foo(x):
     print x 
