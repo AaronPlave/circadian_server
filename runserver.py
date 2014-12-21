@@ -29,11 +29,8 @@ def add_user(userID):
 def add_source():
     sourceURL = request.args.get("sourceURL")
     userID = request.args.get("userID")
-    songs = sources.add_source(sourceURL,userID)
-    if songs[0]:
-        return json.dumps(format_songs(songs[1]))
-    else:
-        return json.dumps({"error":"Unable to add source: "+sourceURL})
+    result = sources.add_source(sourceURL,userID)
+    return json.dumps(result)
 
 # get songs from user_id
 @app.route('/get/songs/<userID>', methods=['GET'])

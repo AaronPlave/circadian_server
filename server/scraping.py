@@ -29,24 +29,25 @@ def scrape_new_source(data):
 	# if the blog will successfully yield songs since these blogs
 	# have highly variable soundcloud link yields to begin with.
 	rss_url = getRSS(source_url)
-	if not rss_url:
-		return
+	if rss_url in ("user","server"):
+		print "NO RSS"
+		return rss_url
 
 	# got an RSS so add the source to the db
 	sourceID = db.add_source_to_db(source_url=source_url,rss_url=rss_url)
 	
 	# add source to user
 	if not db.add_source_to_user(sourceID, user_id):
-		return
+		return "server"
 
 	# fetch songs from source
 	results = getMusicFromRSS(rss_url)
 	for i in results:
 		db.add_song_to_source(i,sourceID)
 
-	# Update last update time in status
+	# update last update time in status
 	db.set_last_update_time(datetime.now())
-	return True
+	return "good"
 
 def scrape_current_source(data):
 	source_url = data[0]
@@ -64,17 +65,39 @@ def scrape_current_source(data):
 	db.set_last_update_time(datetime.now())
 	return True
 
-def getRSS(blogUrl):
+def fetchPage(url):
+	"""
+	Returns the raw data of a page or nothing if unable to fetch
+	"""
 	try:
-		# print "trying",blogUrl
-		# this line tries to spoof sites :D
-		req = urllib2.Request(blogUrl, headers={'User-Agent' : "Magic Browser"}) 
+		req = urllib2.Request(url, headers={'User-Agent' : "Magic Browser"}) 
 		obj = urllib2.urlopen(req)
 		raw = obj.read()
+		return raw
+	except Exception, e:
+		print "SCRAPING: Unable to fetch url",url
+		print "SCRAPING: ERROR:",e
+
+def getRSS(blogUrl):
+	try:
+		# case where the original blog url is bad
+		raw = fetchPage(blogUrl)
+		if not raw:
+			return "user"
+
+		# try to extract an rss link
 		pattern = re.compile(r'type="application/rss\+xml".*href=".*"')
 		result = pattern.search(raw)
-		match = result.group(0)
 
+		# if no result, try again but with +"/feed" on the url
+		if not result:
+			print "NOPE NO RSS WITH ORIGINAL, TRYING ORIGINAL + /feed"
+			result = fetchPage(blogUrl+"/feed")
+			if not result:
+				print "NOPE NO RSS HERE"
+				return "server"
+
+		match = result.group(0)
 		# get the url
 		urlPattern = re.compile(r'href=".*?"')
 		result2 = urlPattern.search(match)
@@ -87,8 +110,8 @@ def getRSS(blogUrl):
 			return final
 	except:
 		e = sys.exc_info()[0]
-		# print "ERROR",e
-		return
+		print "ERROR",e
+		return "server"
 
 # MUST BE IN HTTP NOT WWW
 blogs = ["http://thissongissick.com/",
@@ -100,9 +123,6 @@ blogs = ["http://thissongissick.com/",
 
 urls = ['http://thissongissick.com/blog/feed/', 'http://www.edmsauce.com/feed/', 'http://eqmusicblog.com/feed/', 'http://www.gorillavsbear.net/feed', 'http://www.abeano.com/feed/', None, 'http://prettymuchamazing.com/feed', None, 'http://doandroidsdance.com/feed/', '/rss/rss.php?id', 'http://blogs.kcrw.com/musicnews/feed/']
 
-# for i in blogs: urls.append(getRSS(i))
-
-# print urls
 
 def isPassed(item):
 	# true if item time < 24 from now, else false
@@ -257,8 +277,7 @@ def getMusicFromRSS(RSS_URL):
 
 	# if from feedburner..
 	if "feedburner" in RSS_URL:
-		print "FROM FEEDBURNER"
-
+		print "FROM FEEDBURNER WARNING NOT GOING TO WORK!"
 
 	# split by item
 	raw = raw.split("<item>")[1:]

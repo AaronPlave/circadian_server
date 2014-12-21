@@ -12,19 +12,33 @@ import time
 import multiprocessing
 import scraping
 
+def format_add_result(source,data):
+    songs_raw = source["songs"]
+    songs = db.format_ids(songs_raw)
+    source["songs"] = songs
+    data["source"] = source
+    data["source"]["_id"] = str(data["source"]["_id"]) 
+    return data
+
 def add_source(source_url,user_id):
+    data = {"error":""}
     result = db.get_source_by_url(source_url)
     if result:
-        songs = db.format_ids(result[0]["songs"])
-        return [True,songs]
+        return format_add_result(result[0],data)
+
     # else scrape the source and if successful add source and songs
     # to db and add the source to the user.
     pool = multiprocessing.Pool(1)
     success = pool.map(scraping.scrape_new_source,[[source_url,user_id]])
-    if success[0]:
-        return [True,db.get_source_by_url(source_url)[0]["songs"]]
-    else:
-        return [False,[]]
+    #result will either be 'good' for no problems, 'user' for an unreachable
+    # url, or 'server' if we can't find an RSS link. 
+    if success[0] == "good":
+        result = db.get_source_by_url(source_url)
+        if result:
+            return format_add_result(result[0],data)
+
+    data["error"] = success[0]
+    return data
 
 def refresh_sources(x):
     SLEEP_TIME = 1*60 #sleep 10 seconds

@@ -136,11 +136,16 @@ def add_song_to_source(song_data,sourceID):
     # add the sourceID to the song
     song["sourceID"] = ObjectId(sourceID)
 
-    # Retrieve the source by sourceID
+    # retrieve the source by sourceID
     result = SOURCES.find({"_id": sourceID})
     if result.count() == 0:
         print "DB: ",sourceID,"not found, unable to add song:",song
         return
+
+    # change the artwork url to larger size
+    aurl = song.get("artworkURL")
+    if aurl:
+        song["artworkURL"] = aurl.replace("-large","-t500x500")
 
     source_songs = result[0]["songs"]
     for i in source_songs:

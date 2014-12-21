@@ -13,3 +13,15 @@
 		subscribed to that source are subscribed to (aggregate of all of those, take
 		the top ones, or something)
 -route to list sources
+-todo add titles to sources by parsing the rss feed for <channel> -> <title>. Fall back to the sourceURL if can't find a title, but strip the http(s):// or the www.
+
+ADD SOURCE
+{error":<errorMsg>}  error is either "user" or "server" or none
+{"error":"","source":{
+					"sourceID":sourceID,
+					"sourceTitle":sourceTitle,
+					"songs":[ObjectID...]
+					}
+
+
+-CHANGE all www to http
