@@ -18,6 +18,14 @@ def format_add_result(source,data):
     source["songs"] = songs
     data["source"] = source
     data["source"]["_id"] = str(data["source"]["_id"]) 
+
+    # change source_url to sourceURL
+    data["source"]["sourceURL"] = data["source"]["source_url"]
+    del data["source"]["source_url"]
+    del data["source"]["rss_url"]
+
+    data["source"]["title"] = data["source"]["sourceURL"]
+    
     return data
 
 def add_source(source_url,user_id):
