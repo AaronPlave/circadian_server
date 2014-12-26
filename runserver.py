@@ -35,7 +35,7 @@ def add_source():
 # get songs from user_id
 @app.route('/get/songs/<userID>', methods=['GET'])
 def get_songs(userID):
-    songs = db.get_user_songs("1")
+    songs = db.get_user_songs(userID)
     return json.dumps(format_songs(songs))
 
 # list all sources (sourceURL, sourceID, #songs, )
