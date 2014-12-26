@@ -34,19 +34,44 @@ def remove_user(user_id):
     else:
         print "DB: Cannot remove user",user_id,"does not exist."
 
-def add_source_to_user(sourceID,user_id):
+def link_source_and_user(sourceID,user_id):
+    # add source to user
+    print "LINKIING!"
     user = get_user(user_id)
     if not user:
         print "DB: No user, can't add source:",sourceID,"to user:",user_id
         return
-    sources = user[0]["sources"]
-    sources.append(sourceID)
-    query = {"sources":sources}
-    if USERS.update({'user_id':user_id},{"$set":query},upsert=False):
-        return True
+    user_sources = user[0]["sources"]
+    if sourceID not in user_sources:
+        user_sources.append(sourceID)
+        query = {"sources":user_sources}
+        if not USERS.update({'user_id':user_id},{"$set":query},upsert=False):
+            print "DB: failed to add source:",sourceID,"to user:",user_id
+            return False
     else:
-        print "DB: failed to add source:",sourceID,"to user:",user_id
+        print "DB: User:",user_id,"already has source",sourceID,",not adding source to user."
 
+    # add user to sources
+    source = get_source_by_id(sourceID)
+    if not source:
+        print "DB: No source, can't add user:",user_id,"to source:",sourceID
+        return
+
+    source_users = source[0]["users"]
+    if user_id not in source_users:
+        user_sources.append(sourceID)
+        query2 = {"users":user_sources}
+        print query2
+        if not SOURCES.update({'_id':sourceID},{"$set":query2},upsert=False):
+            print "DB: failed to add user:",user_id,"to source:",sourceID
+            return False
+    else:
+        print "DB: Source:",sourceID,"already has user",user_id,",not adding user to source."
+    print SOURCES.find_one()
+    print USERS.find_one()
+    return True
+
+    
 
 def remove_source_from_user(sourceID,user_id):
     user = get_user(user_id)
@@ -167,7 +192,7 @@ def list_sources():
     return list(SOURCES.find())
 
 def add_source_to_db(source_url, rss_url="", songs=[]):
-    source = SOURCES.insert({"source_url": source_url, "rss_url":rss_url, "songs": songs})
+    source = SOURCES.insert({"source_url": source_url, "rss_url":rss_url, "songs": songs, "users":[]})
     if source:
         return source
     else:

@@ -43,10 +43,24 @@ def get_songs(userID):
 def get_status():
     return json.dumps(db.get_last_update_time())
 
+# recommendations
+@app.route('/get/recommendations/<userID>', methods=['GET'])
+def get_recommendations(userID):
+    #FAKE !!!!!!!!!
+    raw_recs = db.SOURCES.find()[0:3]
+    results = {"recommendations":[]}
+    for i in raw_recs:
+        results["recommendations"].append(sources.format_source_result(i))
+    print results,"RESS"
+    return json.dumps(results)
+
 @app.route('/startscraping', methods=['GET'])
 def startscraping():
     sources.refresh_handler()
     return "scraping"
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

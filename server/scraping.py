@@ -37,8 +37,8 @@ def scrape_new_source(data):
 	# got an RSS so add the source to the db
 	sourceID = db.add_source_to_db(source_url=source_url,rss_url=rss_url)
 	
-	# add source to user
-	if not db.add_source_to_user(sourceID, user_id):
+	# link source and user
+	if not db.link_source_and_user(sourceID, user_id):
 		return "server"
 
 	# fetch songs from source

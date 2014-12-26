@@ -12,6 +12,8 @@ import time
 import multiprocessing
 import scraping
 
+
+
 def format_add_result(source,data):
     songs_raw = source["songs"]
     songs = db.format_ids(songs_raw)
@@ -28,11 +30,40 @@ def format_add_result(source,data):
     
     return data
 
+def format_source_result(source):
+    # format the songs
+    songs_raw = source["songs"]
+    songs = db.format_ids(songs_raw)
+    source["songs"] = songs
+
+    # change source_url to sourceURL
+    source["sourceURL"] = source["source_url"]
+    del source["source_url"]
+    del source["rss_url"]
+
+    source["title"] = source["sourceURL"]
+
+   # turn the source object id into a string 
+    source["_id"] = str(source["_id"])
+
+    # replace 'users' with 'subscriberCount'
+    source["subscriberCount"] = len(source["users"])
+    del source["users"]
+    return source 
+
 def add_source(source_url,user_id):
     data = {"error":""}
     result = db.get_source_by_url(source_url)
+
     if result:
-        return format_add_result(result[0],data)
+        # add user to source and source to user
+        print result
+        if db.link_source_and_user(result[0]["_id"],user_id):
+            return format_add_result(result[0],data)
+        else:
+            print "SOURCES: Unable to link source and user"
+            data['error'] = 'server'
+            return data
 
     # else scrape the source and if successful add source and songs
     # to db and add the source to the user.
@@ -103,7 +134,6 @@ def test():
 
     print "TEST: scraping sources"
     results = [add_source(i,"1") for i in blogs]
-    print results,"rrr"
 
     # stop test if no sources succeeded
     cont = False
