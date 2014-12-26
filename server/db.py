@@ -178,6 +178,7 @@ def get_last_update_time():
     last_update = STATUS.find_one()
     if last_update:
         return last_update["update_time"].ctime()
+    return {"update_time":"never"}
 
 def set_last_update_time(update_time):
     obj = STATUS.find_one()
@@ -187,3 +188,8 @@ def set_last_update_time(update_time):
     query = {"update_time":update_time}
     if STATUS.update({'_id':obj["_id"]},{"$set":query},upsert=False):
         return True
+
+def remove_all():
+    USERS.drop()
+    STATUS.drop()
+    SOURCES.drop()

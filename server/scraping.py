@@ -28,9 +28,10 @@ def scrape_new_source(data):
 	# theory scrape it (plus, we don't have a way of knowing 
 	# if the blog will successfully yield songs since these blogs
 	# have highly variable soundcloud link yields to begin with.
+	print "SCRAPER: GETTING RSS URL"
 	rss_url = getRSS(source_url)
 	if rss_url in ("user","server"):
-		print "NO RSS"
+		print "SCRAPER: NO RSS"
 		return rss_url
 
 	# got an RSS so add the source to the db
@@ -41,9 +42,11 @@ def scrape_new_source(data):
 		return "server"
 
 	# fetch songs from source
+	print "SCRAPER: GETTING MUSIC FROM RSS"
 	results = getMusicFromRSS(rss_url)
-	for i in results:
-		db.add_song_to_source(i,sourceID)
+	if results:
+		for i in results:
+			db.add_song_to_source(i,sourceID)
 
 	# update last update time in status
 	db.set_last_update_time(datetime.now())
@@ -269,7 +272,7 @@ def getMusicFromRSS(RSS_URL):
 		raw = obj.read()
 	except:
 		e = sys.exc_info()[0]
-		# print "Failed to fetch",RSS_URL,e
+		print "Failed to fetch",RSS_URL,e
 		return
 
 	#MIGHT want to do a quick regex search for soundcloud to make 

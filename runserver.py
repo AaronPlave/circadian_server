@@ -41,7 +41,6 @@ def get_songs(userID):
 # list all sources (sourceURL, sourceID, #songs, )
 @app.route('/get/status', methods=['GET'])
 def get_status():
-    print db.get_last_update_time()
     return json.dumps(db.get_last_update_time())
 
 @app.route('/startscraping', methods=['GET'])

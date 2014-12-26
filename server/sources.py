@@ -36,10 +36,12 @@ def add_source(source_url,user_id):
 
     # else scrape the source and if successful add source and songs
     # to db and add the source to the user.
+    print "DONT HAVE SOURCE YET, SCRAPING:",source_url
     pool = multiprocessing.Pool(1)
     success = pool.map(scraping.scrape_new_source,[[source_url,user_id]])
     #result will either be 'good' for no problems, 'user' for an unreachable
-    # url, or 'server' if we can't find an RSS link. 
+    # url, or 'server' if we can't find an RSS link.
+    print "RESULT OF SCRAPING:",success 
     if success[0] == "good":
         result = db.get_source_by_url(source_url)
         if result:
@@ -62,11 +64,6 @@ def refresh_sources(x):
     print "REFRESHER: SCRAPED SOURCES"
     time.sleep(SLEEP_TIME)
     refresh_sources(x)
-
-def foo(x):
-    print x 
-    time.sleep(3)
-    foo(x)
 
 def refresh_handler():
     print "Starting source refresh process"
@@ -97,10 +94,10 @@ def test():
     # Add source
     blogs = ["http://thissongissick.com",
         "http://eqmusicblog.com",'http://gorillavsbear.net',
-        'http://abeano.com','http://potholesinmyblog.com',
-        'http://prettymuchamazing.com','http://disconaivete.com',
-        'http://doandroidsdance.com','http://www.npr.org/blogs/allsongs/',
-        'http://blogs.kcrw.com/musicnews/',"http://www.edmsauce.com"]
+        'http://potholesinmyblog.com', 'http://prettymuchamazing.com',
+        'http://disconaivete.com', 'http://doandroidsdance.com',
+        'http://www.npr.org/blogs/allsongs/','http://blogs.kcrw.com/musicnews/',
+        "http://www.edmsauce.com"]
 
     # blogs = ["http://www.npr.org/blogs/allsongs/"]
 
