@@ -6,12 +6,74 @@ Adding Source Steps:
     to sources db and return success + source's songs. If scrape fails, return
     failure.
 """
-
 import db
 import time
 import multiprocessing
 import scraping
 
+def get_most_popular_sources(limit=15):
+    """
+    Returns the list of sources ranked by number of subscribers.
+    """
+    print "getting most"
+    return list(db.SOURCES.find(limit=limit).sort([('users',db.pymongo.DESCENDING)]))
+
+def get_user_recommendations(user_id):
+    """
+    Oh boy. Gets recommendations for user based off other users who share
+    the same sources.
+    """
+    user = db.get_user(user_id)
+    if not user:
+        print "User not found, no recommendations"
+        return []
+    user_sources = user[0]["sources"]
+    if not user_sources:
+        print "User has no sources"
+        return get_most_popular_sources()
+    
+    other_sources = {}
+    for s in user_sources:
+        tmp_source = db.get_source_by_id(s)
+        if not tmp_source:
+            print "SOURCES: Unable to find source in get rec, skipping"
+            continue
+        source_users = tmp_source[0]["users"]
+        for u in source_users:
+            # if u == current user, skip
+            if u == user[0]["user_id"]:
+                print u, user[0]["user_id"],len(source_users)
+                print "REC: Skipping this source user, same as primary user"
+                continue
+            print "REC: But wait!"
+            tmp_user = db.get_user(u)
+            if not tmp_user:
+                print "REC: Unable to find source user, skipping"
+                continue 
+            other_user_sources = tmp_user[0]["sources"]
+            print "REC: Other user's sources:",other_user_sources
+            for j in other_user_sources:
+                if j not in user_sources:
+                    if j in other_sources:
+                        other_sources[j] += 1
+                    else:
+                        other_sources[j] = 1
+
+    # if after all that we have no recommendations or we don't have many,
+    # just get most popular sources
+    if len(other_sources) < 1:
+        return get_most_popular_sources()
+
+    # otherwise, go get the sources
+    final_recommendations = []
+    for i in other_sources:
+        curr_source = db.get_source_by_id(db.ObjectId(i))
+        if not curr_source:
+            print "REC: Failed to get curr_source"
+            continue
+        final_recommendations.append(curr_source[0])
+    print final_recommendations
+    return final_recommendations
 
 
 def format_add_result(source,data):
@@ -153,3 +215,40 @@ def test():
     
     print "TEST: getting user's songs"
     return db.get_user_songs("1")
+
+
+import random
+def test3():
+    print "TEST: dropping all DBs"
+    db.remove_all()
+
+    print "TEST: adding users"
+    NUM_USERS = 10
+    users = [str(i) for i in range(NUM_USERS)]
+    add_user_result = reduce(lambda x,y: x and y, [db.add_user(i) for i in users])
+    if not add_user_result:
+        print "TEST: FAIL: ADD USERS"
+
+    print "TEST: adding blogs"
+    blogs = ["http://thissongissick.com",
+        "http://eqmusicblog.com",'http://gorillavsbear.net',
+        'http://potholesinmyblog.com', 'http://prettymuchamazing.com',
+        'http://disconaivete.com', 'http://doandroidsdance.com',
+        'http://www.npr.org/blogs/allsongs/','http://blogs.kcrw.com/musicnews/',
+        "http://www.edmsauce.com"]
+
+    # add sources
+    for i in range(len(blogs)):
+        if not add_source(blogs[i],users[i]):
+            print "TEST: FAIL: ADDING SOURCE TO USER"
+
+
+    # add same sources to different users a bunch of times
+    for j in range(7):
+        random.shuffle(users)
+        for i in range(len(blogs)):
+            if not add_source(blogs[i],users[i]):
+                print "TEST: FAIL: ADDING SOURCE TO USER"
+
+    print "TEST: getting recommendations"
+    return get_user_recommendations("2")["songs"]

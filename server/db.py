@@ -17,6 +17,12 @@ def get_user(user_id):
     if user.count() != 0:
         return user
 
+def get_user_by_mongo_id(mongo_id):
+    user = USERS.find({"_id":ObjectId(mongo_id)})
+    if user.count() !=0:
+        return user
+
+
 def add_user(user_id):
     """
     Adds a user if the user does not already exist.
@@ -36,7 +42,6 @@ def remove_user(user_id):
 
 def link_source_and_user(sourceID,user_id):
     # add source to user
-    print "LINKIING!"
     user = get_user(user_id)
     if not user:
         print "DB: No user, can't add source:",sourceID,"to user:",user_id
@@ -56,19 +61,17 @@ def link_source_and_user(sourceID,user_id):
     if not source:
         print "DB: No source, can't add user:",user_id,"to source:",sourceID
         return
-
     source_users = source[0]["users"]
     if user_id not in source_users:
-        user_sources.append(sourceID)
-        query2 = {"users":user_sources}
-        print query2
+        source_users.append(user_id)
+        query2 = {"users":source_users}
         if not SOURCES.update({'_id':sourceID},{"$set":query2},upsert=False):
             print "DB: failed to add user:",user_id,"to source:",sourceID
             return False
     else:
         print "DB: Source:",sourceID,"already has user",user_id,",not adding user to source."
-    print SOURCES.find_one()
-    print USERS.find_one()
+    # print SOURCES.find_one()
+    # print USERS.find_one()
     return True
 
     
@@ -113,11 +116,11 @@ def get_user_songs(user_id):
     user = get_user(user_id)
     if not user:
         print "DB: No user, can't get source from user."
-        return "DB: No such user:",user_id
+        return []
     sources = user[0]["sources"]
     if not sources:
         print "DB: No sources for user:",user_id,"no songs to return."
-        return {}
+        return []
 
     #otherwise, aggregate all songs over all the sources
     # print sources, "USER",user_id,"'s sources"

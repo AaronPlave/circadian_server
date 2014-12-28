@@ -11,9 +11,9 @@ def hello():
     return "ALIVE"
 
 ####$$$$$$ TEST ####$$$$$$$
-@app.route('/test2')
-def test2():
-    songs = format_songs(sources.test())
+@app.route('/test3')
+def test3():
+    songs = format_songs(sources.test3())
     return json.dumps(songs)
 ##################
 
@@ -46,9 +46,9 @@ def get_status():
 # recommendations
 @app.route('/get/recommendations/<userID>', methods=['GET'])
 def get_recommendations(userID):
-    #FAKE !!!!!!!!!
-    raw_recs = db.SOURCES.find()[0:3]
+    raw_recs = sources.get_user_recommendations(userID)
     results = {"recommendations":[]}
+    print raw_recs
     for i in raw_recs:
         results["recommendations"].append(sources.format_source_result(i))
     print results,"RESS"
@@ -58,9 +58,6 @@ def get_recommendations(userID):
 def startscraping():
     sources.refresh_handler()
     return "scraping"
-
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)
