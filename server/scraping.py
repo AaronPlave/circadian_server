@@ -24,7 +24,6 @@ TIME_DELTA = 1000
 def scrape_new_source(data):
 	source_url = data[0]
 	user_id = data[1]
-	print "USER IDDDDDDDDDDDDD IS ",user_id
 	# if we can get an RSS link out of the blog, we can in 
 	# theory scrape it (plus, we don't have a way of knowing 
 	# if the blog will successfully yield songs since these blogs
@@ -37,7 +36,7 @@ def scrape_new_source(data):
 
 	# got an RSS so add the source to the db
 	sourceID = db.add_source_to_db(source_url=source_url,rss_url=rss_url)
-	print "!!!!!!!!!!!!!!!!!!SOURRRRRRCE ID = ",sourceID
+
 	# link source and user
 	if not db.link_source_and_user(sourceID, user_id):
 		return "server"
@@ -207,8 +206,13 @@ def modifySoundCloudObject(song):
 
 	# Add new duplicate fields with different names for Phil
 	song["artworkURL"] = song.get("artwork_url") 
-	song["artist"] = song.get("title") 
 	song["date"] = song.get("created_at") 
+
+	user = song.get("user")
+	if user:
+		song["artist"] = user["username"]
+	else:
+		song["artist"] = song.get("Unknown Artist") 
 
 	# Generate unique id for the song
 	song["_id"] = str(uuid.uuid4())[0:8]

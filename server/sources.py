@@ -251,4 +251,4 @@ def test3():
                 print "TEST: FAIL: ADDING SOURCE TO USER"
 
     print "TEST: getting recommendations"
-    return get_user_recommendations("2")["songs"]
+    return get_user_recommendations("2")
