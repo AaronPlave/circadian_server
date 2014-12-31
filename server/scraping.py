@@ -19,7 +19,7 @@ from datetime import datetime
 
 CLIENT_ID = "a9c272921e809f861f1951ea6ff1f829"
 CLIENT_SECRET = "6d4cea605ed5e4c48bec8a48ef545310"
-TIME_DELTA = 1000
+TIME_DELTA = 48
 
 def scrape_new_source(data):
 	source_url = data[0]

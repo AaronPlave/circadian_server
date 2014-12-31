@@ -46,7 +46,7 @@ def get_status():
 # recommendations
 @app.route('/get/recommendations/<userID>', methods=['GET'])
 def get_recommendations(userID):
-    raw_recs = sources.get_user_recommendations(userID)
+    raw_recs = db.get_user_recommendations(userID)
     results = {"recommendations":[]}
     print raw_recs
     for i in raw_recs:

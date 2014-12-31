@@ -22,13 +22,36 @@ def get_user_by_mongo_id(mongo_id):
     if user.count() !=0:
         return user
 
+def update_user_recommendations(user_id,new_recs):
+    print "DB: Updating user recs:",user_id,new_recs
+    user = get_user(user_id)
+    if not user:
+        print "DB: No user, can't get user:",user_id,"recommendations."
+        return []
+    query = {"recommendations":new_recs}
+    return USERS.update({'user_id':user_id},{"$set":query},upsert=False)
+
+def get_user_recommendations(user_id):
+    user = get_user(user_id)
+    if not user:
+        print "DB: No user, can't get user:",user_id,"recommendations."
+        return []
+    user_recs = user[0]["recommendations"]
+    #turn source object ids into full sources!
+    full_recs = []
+    for i in user_recs:
+        source = get_source_by_id(i)
+        if not source:
+            continue
+        full_recs.append(source[0])
+    return full_recs
 
 def add_user(user_id):
     """
     Adds a user if the user does not already exist.
     """
     if not get_user(user_id):
-        if USERS.insert({"user_id":user_id,"sources":[]}):
+        if USERS.insert({"user_id":user_id,"sources":[],"recommendations":[]}):
             return True
     else:
         print "DB: User already exists, not adding."

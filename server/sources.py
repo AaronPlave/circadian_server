@@ -10,33 +10,45 @@ import db
 import time
 import multiprocessing
 import scraping
+from collections import Counter
 
-def get_most_popular_sources(limit=15):
-    """
-    Returns the list of sources ranked by number of subscribers.
-    """
-    print "getting most"
-    return list(db.SOURCES.find(limit=limit).sort([('users',db.pymongo.DESCENDING)]))
+REFRESH_WAIT_MINUTES = 15 
 
-def get_user_recommendations(user_id):
+
+def get_most_popular_sources(user_sources):
+    """
+    Returns the list of sources ranked by number of subscribers that are
+    not in the set of sources owned by 'user'.
+    """
+    sources = db.SOURCES.find().sort([('users',db.pymongo.DESCENDING)])
+    final_sources = []
+    for i in sources:
+        if i not in user_sources:
+            final_sources.append(i["_id"])
+    return final_sources
+
+def build_user_recommendations(user_id):
     """
     Oh boy. Gets recommendations for user based off other users who share
     the same sources.
     """
+    NUM_RECOMMENDATIONS = 1
     user = db.get_user(user_id)
     if not user:
-        print "User not found, no recommendations"
+        print "REC: User not found, no recommendations"
         return []
     user_sources = user[0]["sources"]
+
     if not user_sources:
-        print "User has no sources"
-        return get_most_popular_sources()
-    
-    other_sources = {}
+        print "REC: User has no sources"
+        other_sources = get_most_popular_sources(user_sources)
+        return db.update_user_recommendations(user_id,other_sources)
+
+    other_sources = Counter()
     for s in user_sources:
         tmp_source = db.get_source_by_id(s)
         if not tmp_source:
-            print "SOURCES: Unable to find source in get rec, skipping"
+            print "REC: Unable to find source in get rec, skipping"
             continue
         source_users = tmp_source[0]["users"]
         for u in source_users:
@@ -54,27 +66,26 @@ def get_user_recommendations(user_id):
             print "REC: Other user's sources:",other_user_sources
             for j in other_user_sources:
                 if j not in user_sources:
-                    if j in other_sources:
+                        # if j not in other_sources it will automatically be 0
                         other_sources[j] += 1
-                    else:
-                        other_sources[j] = 1
 
     # if after all that we have no recommendations or we don't have many,
     # just get most popular sources
-    if len(other_sources) < 1:
-        return get_most_popular_sources()
+    other_sources = [i[0] for i in other_sources.most_common()]
+    if len(other_sources) < NUM_RECOMMENDATIONS:
+        other_sources = get_most_popular_sources(user_sources)
+    print "REC: other sources:",other_sources
+    # update user recs and return the db add query boolean.   
+    return db.update_user_recommendations(user_id,other_sources)
 
-    # otherwise, go get the sources
-    final_recommendations = []
-    for i in other_sources:
-        curr_source = db.get_source_by_id(db.ObjectId(i))
-        if not curr_source:
-            print "REC: Failed to get curr_source"
-            continue
-        final_recommendations.append(curr_source[0])
-    print final_recommendations
-    return final_recommendations
-
+def build_recommendations():
+    """
+    Builds recommendations for each user in the db. If any fail, return False.
+    """
+    success = True
+    for u in db.USERS.find():
+        success = build_user_recommendations(u["user_id"])
+    return success
 
 def format_add_result(source,data):
     songs_raw = source["songs"]
@@ -144,7 +155,7 @@ def add_source(source_url,user_id):
     return data
 
 def refresh_sources(x):
-    SLEEP_TIME = 1*60 #sleep 10 seconds
+    SLEEP_TIME = REFRESH_WAIT_MINUTES*60  #convert to seconds
     sources = db.SOURCES.find()
 
     if sources.count() == 0:
@@ -155,6 +166,11 @@ def refresh_sources(x):
     sources_to_scrape = [(i["source_url"],i["_id"],i["rss_url"]) for i in sources]
     [scraping.scrape_current_source(i) for i in sources_to_scrape]
     print "REFRESHER: SCRAPED SOURCES"
+    print "REFRESHER: BUILDING RECOMMENDATIONS"
+    recs_built = build_recommendations()
+    if not recs_built:
+        print "REFRESHER: FAIL: UNABLE TO BUILD RECOMMENDATIONS"
+    print "REFRESHER: SUCCESSFULY SCRAPED SOURCES AND BUILT RECS, SLEEPING"
     time.sleep(SLEEP_TIME)
     refresh_sources(x)
 
@@ -250,5 +266,10 @@ def test3():
             if not add_source(blogs[i],users[i]):
                 print "TEST: FAIL: ADDING SOURCE TO USER"
 
+
+    print "TEST: adding new user to test for no sources"
+    db.add_user("some_person")
+
     print "TEST: getting recommendations"
-    return get_user_recommendations("2")
+    print build_recommendations()
+    return ""
