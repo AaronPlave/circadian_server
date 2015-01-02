@@ -1,17 +1,5 @@
 -save the RSS url for each source after it's determined and use later to skip the getRSS step.
 -add a last updated field for each source
--TODO: make this rec system less painful by moving all the operations to post-scraping. So, build the recommendations for each user, store them inside the user, and then cache a get_most_popular_sources query.
-
--route to list sources
 -todo add titles to sources by parsing the rss feed for <channel> -> <title>. Fall back to the sourceURL if can't find a title, but strip the http(s):// or the www.
-
-ADD SOURCE
-{error":<errorMsg>}  error is either "user" or "server" or none
-{"error":"","source":{
-					"sourceID":sourceID,
-					"sourceTitle":sourceTitle,
-					"songs":[ObjectID...]
-					}
-
 
 -CHANGE all www to http

@@ -55,16 +55,17 @@ def scrape_new_source(data):
 	return "good"
 
 def scrape_current_source(data):
-	source_url = data[0]
-	sourceID = data[1]
+	print "scraping current source",data
+	sourceID = data[0]
+	rss_url = data[1]
 
-	rss_url = getRSS(source_url)
 	if not rss_url:
-		return
+		return False
 
 	results = getMusicFromRSS(rss_url)
-	for i in results:
-		db.add_song_to_source(i,sourceID)
+	if results:
+		for i in results:
+			db.add_song_to_source(i,sourceID)
 
 	# Update last update time in status
 	db.set_last_update_time(datetime.now())
@@ -317,11 +318,11 @@ def getMusicFromRSS(RSS_URL):
 		return
 
 
-blogs = ["http://thissongissick.com",
-        "http://eqmusicblog.com",'http://gorillavsbear.net',
-        'http://potholesinmyblog.com', 'http://prettymuchamazing.com',
-        'http://disconaivete.com', 'http://doandroidsdance.com',
-        'http://www.npr.org/blogs/allsongs/','http://blogs.kcrw.com/musicnews/',
-        "http://www.edmsauce.com"]
+# blogs = ["http://thissongissick.com",
+#         "http://eqmusicblog.com",'http://gorillavsbear.net',
+#         'http://potholesinmyblog.com', 'http://prettymuchamazing.com',
+#         'http://disconaivete.com', 'http://doandroidsdance.com',
+#         'http://www.npr.org/blogs/allsongs/','http://blogs.kcrw.com/musicnews/',
+#         "http://www.edmsauce.com"]
 
-[getMusicFromRSS(getRSS(i)) for i in blogs]
+# [getMusicFromRSS(getRSS(i)) for i in blogs]

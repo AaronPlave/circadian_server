@@ -163,7 +163,8 @@ def refresh_sources(x):
         time.sleep(SLEEP_TIME)
         refresh_sources()
     print "REFRESHER: SCRAPING SONGS"
-    sources_to_scrape = [(i["source_url"],i["_id"],i["rss_url"]) for i in sources]
+    sources_to_scrape = [(i["_id"],i["rss_url"]) for i in sources]
+    print sources_to_scrape
     [scraping.scrape_current_source(i) for i in sources_to_scrape]
     print "REFRESHER: SCRAPED SOURCES"
     print "REFRESHER: BUILDING RECOMMENDATIONS"
