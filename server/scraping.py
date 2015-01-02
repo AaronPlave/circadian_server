@@ -4,6 +4,7 @@ import sys
 import json
 import db
 import uuid
+import urlparse
 from datetime import datetime
 import feedparser
 feedparser._HTMLSanitizer.acceptable_elements.add("iframe")
@@ -36,8 +37,15 @@ def scrape_new_source(data):
 		print "SCRAPER: NO RSS"
 		return rss_url
 
+	# figure out title of source by looking at source_url
+	tmp_title = urlparse.urlparse(source_url).hostname
+	title = tmp_title if tmp_title else source_url
+
+	print "tmp_title",tmp_title
+	print "title!!!!!!!!!!!!!!!!",title
+
 	# got an RSS so add the source to the db
-	sourceID = db.add_source_to_db(source_url=source_url,rss_url=rss_url)
+	sourceID = db.add_source_to_db(source_url=source_url,title=title, rss_url=rss_url)
 
 	# link source and user
 	if not db.link_source_and_user(sourceID, user_id):
@@ -55,7 +63,6 @@ def scrape_new_source(data):
 	return "good"
 
 def scrape_current_source(data):
-	print "scraping current source",data
 	sourceID = data[0]
 	rss_url = data[1]
 

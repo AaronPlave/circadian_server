@@ -12,7 +12,6 @@ import multiprocessing
 import scraping
 from collections import Counter
 import random
-import urlparse
 
 REFRESH_WAIT_MINUTES = 15 
 
@@ -92,10 +91,6 @@ def format_add_result(source,data):
     del data["source"]["source_url"]
     del data["source"]["rss_url"]
 
-    # figure out title of source by looking at sourceURL
-    tmp_title = urlparse.urlparse(data["source"]["sourceURL"])
-    data["source"]["title"] = tmp_title if tmp_title else data["source"]["sourceURL"]
-    
     return data
 
 def format_source_result(source):
@@ -108,8 +103,6 @@ def format_source_result(source):
     source["sourceURL"] = source["source_url"]
     del source["source_url"]
     del source["rss_url"]
-
-    source["title"] = source["sourceURL"]
 
    # turn the source object id into a string 
     source["_id"] = str(source["_id"])

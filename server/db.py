@@ -214,8 +214,9 @@ def list_sources():
     """
     return list(SOURCES.find())
 
-def add_source_to_db(source_url, rss_url="", songs=[]):
-    source = SOURCES.insert({"source_url": source_url, "rss_url":rss_url, "songs": songs, "users":[]})
+def add_source_to_db(source_url, title, rss_url=""):
+    source = SOURCES.insert({"source_url": source_url, "title":title,"rss_url":rss_url,
+                            "songs": [], "users":[]})
     if source:
         return source
     else:
