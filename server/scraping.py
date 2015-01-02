@@ -5,6 +5,7 @@ import json
 import db
 import uuid
 from datetime import datetime
+import feedparser
 
 # id:"a9c272921e809f861f1951ea6ff1f829"
 # secret:@"6d4cea605ed5e4c48bec8a48ef545310"
@@ -19,7 +20,7 @@ from datetime import datetime
 
 CLIENT_ID = "a9c272921e809f861f1951ea6ff1f829"
 CLIENT_SECRET = "6d4cea605ed5e4c48bec8a48ef545310"
-TIME_DELTA = 48
+TIME_DELTA = 11148   #number of hours old
 
 def scrape_new_source(data):
 	source_url = data[0]
@@ -142,12 +143,22 @@ def isPassed(item):
 	elif result.group(1) == "lastBuildDate":
 		match = match.split("<lastBuildDate>")[1].split("</lastBuildDate>")[0].replace(",","")
 	m = match.split()
-	# getting rid of the weird thing after the hour/min/sec
+	# getting rid of the timezone field after the hour/min/sec, not supported.
 	match = " ".join(m[0:len(m)-1])
 	item_time = datetime.strptime(match, '%a %d %b %Y %H:%M:%S')
 	current_time = datetime.now()
 	delta = current_time - item_time
-	hours = (TIME_DELTA*delta.days)+(delta.seconds/60.0/60.0)
+	hours = (delta.days*24)+(delta.seconds/60.0/60.0)
+	return hours < TIME_DELTA
+
+def isFBPassed(item):
+	# getting rid of the timezone field after the hour/min/sec, not supported.
+	item = item.split()
+	item = " ".join(item[0:len(item)-1])
+	item_time = datetime.strptime(item, '%a, %d %b %Y %H:%M:%S')
+	current_time = datetime.now()
+	delta = current_time - item_time
+	hours = (delta.days*24)+(delta.seconds/60.0/60.0)
 	return hours < TIME_DELTA
 
 def requestTrack(track_id):
@@ -156,7 +167,7 @@ def requestTrack(track_id):
 							str(track_id)+".json?client_id="+CLIENT_ID)
 	except:
 		e = sys.exc_info()[0]
-		# print "Failed to fetch",e
+		print "Failed to fetch",e
 		return
 
 	response = req.read()
@@ -186,7 +197,7 @@ def fromStandard(link):
 		req = urllib2.urlopen("http://api.soundcloud.com/resolve.json?url="+link+"&"+"client_id="+CLIENT_ID)
 	except:
 		e = sys.exc_info()[0]
-		# print "Failed to fetch fromStandard",link,e
+		print "Failed to fetch fromStandard",link,e
 		return None
 	response = req.read()
 	data = json.loads(response)
@@ -212,7 +223,7 @@ def modifySoundCloudObject(song):
 	if user:
 		song["artist"] = user["username"]
 	else:
-		song["artist"] = song.get("Unknown Artist") 
+		song["artist"] = "Unknown Artist" 
 
 	# Generate unique id for the song
 	song["_id"] = str(uuid.uuid4())[0:8]
@@ -220,7 +231,7 @@ def modifySoundCloudObject(song):
 
 def getSoundCloudLinks(items):
 	# gets the data of each link in each item
-	pattern = re.compile(r'https://(w.soundcloud|soundcloud).*?"')
+	pattern = re.compile(r'https://(w.soundcloud|soundcloud|api.soundcloud).*?"')
 	# patternEmbedded = re.compile(r'https://w.soundcloud.*?"')
 	# patternStandard = re.compile(r'https://soundcloud.*?"')
 	link_data = [] # list of data dictionaries for each link, unique
@@ -268,6 +279,8 @@ def getSoundCloudLinks(items):
 
 	return link_data
 
+
+
 def getMusicFromRSS(RSS_URL):
 	# looks for links from soundcloud and youtube
 	try:
@@ -285,24 +298,29 @@ def getMusicFromRSS(RSS_URL):
 
 	# if from feedburner..
 	if "feedburner" in RSS_URL:
-		print "FROM FEEDBURNER WARNING NOT GOING TO WORK!"
+		parsed = feedparser.parse(raw)
+		entries = parsed["entries"]
+		currentItems = []
+		for e in entries:
+			if isFBPassed(e["published"]):
+				currentItems.append(e["content"][0]["value"])	
+	# generic RSS method
+	else:
+		# split by item
+		raw = raw.split("<item>")[1:]
 
-	# split by item
-	raw = raw.split("<item>")[1:]
+		# if no item tag be sad and return for now
+		if not raw:
+			# print "Nothing called '<item>'"
+			return
 
-	# if no item tag be sad and return for now
-	if not raw:
-		# print "Nothing called '<item>'"
-		return
-
-	#filter out items based on time
-	currentItems = []
-	for l in raw:
-		if isPassed(l) == True:
-			currentItems.append(l)
+		#filter out items based on time
+		currentItems = []
+		for l in raw:
+			if isPassed(l):
+				currentItems.append(l)
 
 	# scan for SC links and youtube links, SC currently returns data
-	print len(currentItems)
 	soundcloud_data = getSoundCloudLinks(currentItems)
 	# youtube_data = getYoutubeLinks(currentItems)
 
@@ -310,3 +328,7 @@ def getMusicFromRSS(RSS_URL):
 	print "SCRAPER: SUCCESS ON",RSS_URL
 	print "SCRAPER: # SONGS:",len(soundcloud_data)
 	return soundcloud_data
+
+
+
+getMusicFromRSS("http://feeds.feedburner.com/eqmusicblog/HPsk")
