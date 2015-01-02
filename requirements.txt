@@ -10,3 +10,4 @@ pymongo==2.7.2
 wsgiref==0.1.2
 newrelic
 feedparser
+soundcloud

@@ -41,9 +41,6 @@ def scrape_new_source(data):
 	tmp_title = urlparse.urlparse(source_url).hostname
 	title = tmp_title if tmp_title else source_url
 
-	print "tmp_title",tmp_title
-	print "title!!!!!!!!!!!!!!!!",title
-
 	# got an RSS so add the source to the db
 	sourceID = db.add_source_to_db(source_url=source_url,title=title, rss_url=rss_url)
 

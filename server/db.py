@@ -173,11 +173,26 @@ def get_source_by_id(sourceID):
     if result.count() != 0:
         return result
 
+# def get_sc_source_by_mongo_id(sc_id):
+
+def get_sc_source_by_sc_id(sc_id):
+    """
+    Return the MongoObject with sc_id == sc_id if one exists.
+    """
+    result = SOURCES.find({"sc_id": sc_id})
+    if result.count() != 0:
+        return result
+
+
+
 def add_song_to_source(song_data,sourceID):
     """
     Song is a dictionary returned from the scraper. Song is added if does
     not already exist in the db under the specified streamURL.
     """
+    print song_data,type(song_data)
+    if not song_data:
+        return
     opt_fields = ["_id","title", "genre", "streamURL", "artworkURL", "date","artist"]
     song = {k: song_data.get(k) for k in opt_fields}
 
@@ -222,6 +237,57 @@ def add_source_to_db(source_url, title, rss_url=""):
     else:
         print "Unable to add source url:",source_url,"to db"
 
+def add_sc_user_to_db(sc_id,username):
+    """
+    Adds sc user to db.
+    """
+    print sc_id,"DB: SC_ID"
+    source = SOURCES.insert({"sc_id":sc_id,"username":username,"songs": [], "users":[]})
+    if source:
+        return source
+    else:
+        print "Unable to add sc source:",sc_id,"to db"
+
+# def add_songs_to_sc_source(songs,sourceID):
+#     """
+#     Adds all the sc songs in the array 'songs' of soundcloud objects to 
+#     the sourceID db entry.
+#     """
+#     sc_user = get_sc_source_by_sc_id(sc_id)
+#     if not sc_user:
+#         return 
+
+#     opt_fields = ["_id","title", "genre", "streamURL", "artworkURL", "date","artist"]
+#     for s in songs:
+#         print s
+#         song = {k: s.get(k) for k in opt_fields}
+
+#         # add the sourceID to the song
+#     song["sourceID"] = ObjectId(sourceID)
+
+#     # retrieve the source by sourceID
+#     result = SOURCES.find({"_id": sourceID})
+#     if result.count() == 0:
+#         print "DB: ",sourceID,"not found, unable to add song:",song
+#         return
+
+#     # change the artwork url to larger size
+#     aurl = song.get("artworkURL")
+#     if aurl:
+#         song["artworkURL"] = aurl.replace("-large","-t500x500")
+
+#     source_songs = result[0]["songs"]
+#     for i in source_songs:
+#         if i["streamURL"] == song["streamURL"]:
+#             # print "DB: Song already exists in specified source, skipping."
+#             return
+
+#     source_songs.append(song)
+#     query = {"songs":source_songs}
+#     if SOURCES.update({'_id':ObjectId(sourceID)},{"$set":query},upsert=False):
+#         return True
+#     else:
+#         print "DB: Unable to add song:",song_data.get("_id"),"to source:",sourceID
 
 def get_last_update_time():
     last_update = STATUS.find_one()

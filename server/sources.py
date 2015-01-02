@@ -12,6 +12,7 @@ import multiprocessing
 import scraping
 from collections import Counter
 import random
+import sc_lib
 
 REFRESH_WAIT_MINUTES = 15 
 
@@ -80,6 +81,7 @@ def build_recommendations():
     return success
 
 def format_add_result(source,data):
+    print source
     songs_raw = source["songs"]
     songs = db.format_ids(songs_raw)
     source["songs"] = songs
@@ -87,9 +89,10 @@ def format_add_result(source,data):
     data["source"]["_id"] = str(data["source"]["_id"]) 
 
     # change source_url to sourceURL
-    data["source"]["sourceURL"] = data["source"]["source_url"]
-    del data["source"]["source_url"]
-    del data["source"]["rss_url"]
+    if data["source"].get("source_url"):
+        data["source"]["sourceURL"] = data["source"]["source_url"]
+        del data["source"]["source_url"]
+        del data["source"]["rss_url"]
 
     return data
 
@@ -100,9 +103,10 @@ def format_source_result(source):
     source["songs"] = songs
 
     # change source_url to sourceURL
-    source["sourceURL"] = source["source_url"]
-    del source["source_url"]
-    del source["rss_url"]
+    if source.get("source_url"):
+        source["sourceURL"] = source["source_url"]
+        del source["source_url"]
+        del source["rss_url"]
 
    # turn the source object id into a string 
     source["_id"] = str(source["_id"])
@@ -112,7 +116,7 @@ def format_source_result(source):
     del source["users"]
     return source 
 
-def add_source(source_url,user_id):
+def add_blog_source(source_url,user_id):
     data = {"error":""}
     result = db.get_source_by_url(source_url)
 
@@ -138,6 +142,35 @@ def add_source(source_url,user_id):
 
     data["error"] = success[0]
     return data
+
+def add_sc_source(sc_id, user_id):
+    data = {"error":""}
+    result = db.get_sc_source_by_sc_id(sc_id)
+
+    if result:
+        # add user to source and source to user
+        if db.link_source_and_user(result[0]["_id"],user_id):
+            return format_add_result(result[0],data)
+        else:
+            print "SOURCES: Unable to link source and user"
+            data['error'] = 'server'
+            return data
+
+    # else validate the new sc source and if exists, add source and songs
+    # to db and add the source to the user.
+    pool = multiprocessing.Pool(1)
+    success = pool.map(sc_lib.validate_new_user,[[sc_id,user_id]])
+    #result will either be 'good' for no problems, 'user' for a bad sc_id
+    # ,or 'server' if something else is broken.
+    if success[0] == "good":
+        # success[1] will be the mongo id of the new source
+        result = db.get_sc_source_by_sc_id(sc_id)
+        if result:
+            return format_add_result(result[0],data)
+
+    data["error"] = success[0]
+    return data
+
 
 def refresh_sources(x):
     SLEEP_TIME = REFRESH_WAIT_MINUTES*60  #convert to seconds
@@ -197,7 +230,7 @@ def test():
     # blogs = ["http://www.npr.org/blogs/allsongs/"]
 
     print "TEST: scraping sources"
-    results = [add_source(i,"1") for i in blogs]
+    results = [add_blog_source(i,"1") for i in blogs]
 
     # stop test if no sources succeeded
     cont = False
@@ -241,7 +274,7 @@ def test3():
 
     # add sources
     for i in range(len(blogs)):
-        if not add_source(blogs[i],users[i]):
+        if not add_blog_source(blogs[i],users[i]):
             print "TEST: FAIL: ADDING SOURCE TO USER"
 
 
@@ -250,7 +283,7 @@ def test3():
         random.shuffle(users)
         random.shuffle(blogs)
         for i in range(len(blogs)):
-            if not add_source(blogs[i],users[i]):
+            if not add_blog_source(blogs[i],users[i]):
                 print "TEST: FAIL: ADDING SOURCE TO USER"
 
 
