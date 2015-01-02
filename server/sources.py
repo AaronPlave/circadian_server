@@ -11,6 +11,8 @@ import time
 import multiprocessing
 import scraping
 from collections import Counter
+import random
+import urlparse
 
 REFRESH_WAIT_MINUTES = 15 
 
@@ -35,12 +37,11 @@ def build_user_recommendations(user_id):
     NUM_RECOMMENDATIONS = 1
     user = db.get_user(user_id)
     if not user:
-        print "REC: User not found, no recommendations"
+        print "REC: ERROR: User not found, no recommendations"
         return []
     user_sources = user[0]["sources"]
 
     if not user_sources:
-        print "REC: User has no sources"
         other_sources = get_most_popular_sources(user_sources)
         return db.update_user_recommendations(user_id,other_sources)
 
@@ -48,22 +49,15 @@ def build_user_recommendations(user_id):
     for s in user_sources:
         tmp_source = db.get_source_by_id(s)
         if not tmp_source:
-            print "REC: Unable to find source in get rec, skipping"
             continue
         source_users = tmp_source[0]["users"]
         for u in source_users:
-            # if u == current user, skip
             if u == user[0]["user_id"]:
-                print u, user[0]["user_id"],len(source_users)
-                print "REC: Skipping this source user, same as primary user"
                 continue
-            print "REC: But wait!"
             tmp_user = db.get_user(u)
             if not tmp_user:
-                print "REC: Unable to find source user, skipping"
                 continue 
             other_user_sources = tmp_user[0]["sources"]
-            print "REC: Other user's sources:",other_user_sources
             for j in other_user_sources:
                 if j not in user_sources:
                         # if j not in other_sources it will automatically be 0
@@ -74,7 +68,6 @@ def build_user_recommendations(user_id):
     other_sources = [i[0] for i in other_sources.most_common()]
     if len(other_sources) < NUM_RECOMMENDATIONS:
         other_sources = get_most_popular_sources(user_sources)
-    print "REC: other sources:",other_sources
     # update user recs and return the db add query boolean.   
     return db.update_user_recommendations(user_id,other_sources)
 
@@ -99,7 +92,9 @@ def format_add_result(source,data):
     del data["source"]["source_url"]
     del data["source"]["rss_url"]
 
-    data["source"]["title"] = data["source"]["sourceURL"]
+    # figure out title of source by looking at sourceURL
+    tmp_title = urlparse.urlparse(data["source"]["sourceURL"])
+    data["source"]["title"] = tmp_title if tmp_title else data["source"]["sourceURL"]
     
     return data
 
@@ -130,7 +125,6 @@ def add_source(source_url,user_id):
 
     if result:
         # add user to source and source to user
-        print result
         if db.link_source_and_user(result[0]["_id"],user_id):
             return format_add_result(result[0],data)
         else:
@@ -140,12 +134,10 @@ def add_source(source_url,user_id):
 
     # else scrape the source and if successful add source and songs
     # to db and add the source to the user.
-    print "DONT HAVE SOURCE YET, SCRAPING:",source_url
     pool = multiprocessing.Pool(1)
     success = pool.map(scraping.scrape_new_source,[[source_url,user_id]])
     #result will either be 'good' for no problems, 'user' for an unreachable
     # url, or 'server' if we can't find an RSS link.
-    print "RESULT OF SCRAPING:",success 
     if success[0] == "good":
         result = db.get_source_by_url(source_url)
         if result:
@@ -176,7 +168,7 @@ def refresh_sources(x):
     refresh_sources(x)
 
 def refresh_handler():
-    print "Starting source refresh process"
+    print "REFRESH HANDLER: Starting source refresh process"
     pool = multiprocessing.Pool(1)
     pool.map_async(refresh_sources,("0"))
 
@@ -234,7 +226,7 @@ def test():
     return db.get_user_songs("1")
 
 
-import random
+
 def test3():
     print "TEST: dropping all DBs"
     db.remove_all()
@@ -263,6 +255,7 @@ def test3():
     # add same sources to different users a bunch of times
     for j in range(7):
         random.shuffle(users)
+        random.shuffle(blogs)
         for i in range(len(blogs)):
             if not add_source(blogs[i],users[i]):
                 print "TEST: FAIL: ADDING SOURCE TO USER"

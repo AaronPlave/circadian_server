@@ -23,7 +23,6 @@ def get_user_by_mongo_id(mongo_id):
         return user
 
 def update_user_recommendations(user_id,new_recs):
-    print "DB: Updating user recs:",user_id,new_recs
     user = get_user(user_id)
     if not user:
         print "DB: No user, can't get user:",user_id,"recommendations."
@@ -76,8 +75,8 @@ def link_source_and_user(sourceID,user_id):
         if not USERS.update({'user_id':user_id},{"$set":query},upsert=False):
             print "DB: failed to add source:",sourceID,"to user:",user_id
             return False
-    else:
-        print "DB: User:",user_id,"already has source",sourceID,",not adding source to user."
+    # else:
+    #     print "DB: User:",user_id,"already has source",sourceID,",not adding source to user."
 
     # add user to sources
     source = get_source_by_id(sourceID)
@@ -91,10 +90,8 @@ def link_source_and_user(sourceID,user_id):
         if not SOURCES.update({'_id':sourceID},{"$set":query2},upsert=False):
             print "DB: failed to add user:",user_id,"to source:",sourceID
             return False
-    else:
-        print "DB: Source:",sourceID,"already has user",user_id,",not adding user to source."
-    # print SOURCES.find_one()
-    # print USERS.find_one()
+    # else:
+    #     print "DB: Source:",sourceID,"already has user",user_id,",not adding user to source."
     return True
 
     
@@ -201,7 +198,7 @@ def add_song_to_source(song_data,sourceID):
     source_songs = result[0]["songs"]
     for i in source_songs:
         if i["streamURL"] == song["streamURL"]:
-            print "DB: Song already exists in specified source, skipping."
+            # print "DB: Song already exists in specified source, skipping."
             return
 
     source_songs.append(song)

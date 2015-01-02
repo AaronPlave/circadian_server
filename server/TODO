@@ -1,4 +1,3 @@
--save the RSS url for each source after it's determined and use later to skip the getRSS step.
 -add a last updated field for each source
 -todo add titles to sources by parsing the rss feed for <channel> -> <title>. Fall back to the sourceURL if can't find a title, but strip the http(s):// or the www.
 
