@@ -6,6 +6,7 @@ import db
 import uuid
 from datetime import datetime
 import feedparser
+feedparser._HTMLSanitizer.acceptable_elements.add("iframe")
 
 # id:"a9c272921e809f861f1951ea6ff1f829"
 # secret:@"6d4cea605ed5e4c48bec8a48ef545310"
@@ -20,7 +21,7 @@ import feedparser
 
 CLIENT_ID = "a9c272921e809f861f1951ea6ff1f829"
 CLIENT_SECRET = "6d4cea605ed5e4c48bec8a48ef545310"
-TIME_DELTA = 11148   #number of hours old
+TIME_DELTA = 48   #number of hours old
 
 def scrape_new_source(data):
 	source_url = data[0]
@@ -79,8 +80,7 @@ def fetchPage(url):
 		raw = obj.read()
 		return raw
 	except Exception, e:
-		print "SCRAPING: Unable to fetch url",url
-		print "SCRAPING: ERROR:",e
+		print "SCRAPING: Unable to fetch url",url, "ERROR:",e
 
 def getRSS(blogUrl):
 	try:
@@ -95,10 +95,10 @@ def getRSS(blogUrl):
 
 		# if no result, try again but with +"/feed" on the url
 		if not result:
-			print "NOPE NO RSS WITH ORIGINAL, TRYING ORIGINAL + /feed"
+			# print "NOPE NO RSS WITH ORIGINAL, TRYING ORIGINAL + /feed"
 			result = fetchPage(blogUrl+"/feed")
 			if not result:
-				print "NOPE NO RSS HERE"
+				# print "NOPE NO RSS HERE"
 				return "server"
 
 		match = result.group(0)
@@ -114,7 +114,7 @@ def getRSS(blogUrl):
 			return final
 	except:
 		e = sys.exc_info()[0]
-		print "ERROR",e
+		print "SCRAPER: ERROR",e
 		return "server"
 
 # MUST BE IN HTTP NOT WWW
@@ -133,8 +133,6 @@ def isPassed(item):
 	pattern = re.compile(r'<(pubDate|lastBuildDate)>[A-Z]{1}[a-z]{2}, [0-9]{2} [A-Z]{1}[a-z]{2} \d+ \d+:\d+:\d+ \+\d+</(pubDate|lastBuildDate)>')	
 	result = pattern.search(item)
 	if result == None:
-		# print "No result from searching for date in item"
-		# print item
 		return False
 	match = result.group(0)
 	# have to replace the ',' to format correctly for datetime
@@ -166,10 +164,9 @@ def requestTrack(track_id):
 		req = urllib2.urlopen("http://api.soundcloud.com/tracks/"+
 							str(track_id)+".json?client_id="+CLIENT_ID)
 	except:
-		e = sys.exc_info()[0]
-		print "Failed to fetch",e
+		# e = sys.exc_info()[0]
+		# print "SCRAPER: Failed to fetch in requestTrack",e,
 		return
-
 	response = req.read()
 	data = json.loads(response)
 	return data
@@ -180,7 +177,6 @@ def fromEmbedded(link):
 	p2 = re.compile(r'tracks(/|%2F)\d+')
 	match = p2.search(link)
 	if match == None:
-		# print "No regex match on w.soundcloud type"
 		return
 
 	# replacing escaped backslash with /
@@ -188,7 +184,6 @@ def fromEmbedded(link):
 	track_id = track_id.split("/")[1]
 	data = requestTrack(track_id)
 	if data == None:
-		# print "FAIL:",link
 		pass
 	return data
 
@@ -197,14 +192,13 @@ def fromStandard(link):
 		req = urllib2.urlopen("http://api.soundcloud.com/resolve.json?url="+link+"&"+"client_id="+CLIENT_ID)
 	except:
 		e = sys.exc_info()[0]
-		print "Failed to fetch fromStandard",link,e
+		print "SCRAPER: Failed to fetch fromStandard",link,e
 		return None
 	response = req.read()
 	data = json.loads(response)
 	track_id = data['id']
 	data = requestTrack(track_id)
 	if data == None:
-		# print "FAIL:",link
 		pass
 	return data
 
@@ -229,23 +223,19 @@ def modifySoundCloudObject(song):
 	song["_id"] = str(uuid.uuid4())[0:8]
 	return song
 
+
 def getSoundCloudLinks(items):
 	# gets the data of each link in each item
-	pattern = re.compile(r'https://(w.soundcloud|soundcloud|api.soundcloud).*?"')
-	# patternEmbedded = re.compile(r'https://w.soundcloud.*?"')
-	# patternStandard = re.compile(r'https://soundcloud.*?"')
+	pattern = re.compile(r'https://(w.soundcloud|soundcloud).*?"')
 	link_data = [] # list of data dictionaries for each link, unique
-	# print "SEARCHING:",items,"FOR SC LINKS"
 	for item in items:
 		result = pattern.search(item)
 		if result == None:
-			print "No soundcloud links found in this item"
+			# print "No soundcloud links found in this item","soundcloud",item
 			continue
 		link = result.group(0)
 		link = link.replace('"','')
-		# print "link",link
 		if result.group(1) == "w.soundcloud":
-			# print "w.sound.."
 			data = fromEmbedded(link)
 			if data == None:
 				continue
@@ -254,7 +244,7 @@ def getSoundCloudLinks(items):
 			if data not in link_data:
 				streamable = modifySoundCloudObject(data)
 				if not streamable:
-					print "OH MY GOD NO STREAM URL WHAT DO"
+					print "SCRAPER: OH MY GOD NO STREAM URL WHAT DO"
 					continue
 				link_data.append(streamable)
 			else:
@@ -264,18 +254,15 @@ def getSoundCloudLinks(items):
 			# MIGHT want to try to filter out links that are to 
 			# artist pages and not specific tracks since we can't reall
 			# handle those
-			# print "standard",link
 			data = fromStandard(link)
 			if data == None:
 				continue
 			if data not in link_data:
 				streamable = modifySoundCloudObject(data)
 				if not streamable:
-					print "OH MY GOD NO STREAM URL WHAT DO"
+					print "SCRAPER: OH MY GOD NO STREAM URL WHAT DO"
 					continue
 				link_data.append(streamable)
-			# else:
-			# 	print "Duplicate track",data['id'],data['title']
 
 	return link_data
 
@@ -284,51 +271,57 @@ def getSoundCloudLinks(items):
 def getMusicFromRSS(RSS_URL):
 	# looks for links from soundcloud and youtube
 	try:
-		# print RSS_URL
 		req = urllib2.Request(RSS_URL, headers={'User-Agent' : "Magic Browser"}) 
 		obj = urllib2.urlopen(req)
 		raw = obj.read()
 	except:
 		e = sys.exc_info()[0]
-		print "Failed to fetch",RSS_URL,e
+		print "SCRAPER: Failed to fetch main RSS",RSS_URL,e
 		return
 
 	#MIGHT want to do a quick regex search for soundcloud to make 
 	#sure there's at least one link in there?
+	if "soundcloud" not in raw:
+		print "SCRAPER: No mention of soundcloud in the entire page, skipping this source:",RSS_URL
+		return
 
-	# if from feedburner..
-	if "feedburner" in RSS_URL:
+	# split by item
+	items = raw.split("<item>")[1:]
+
+	# see if it's a feedburner type rss feed..
+	if not items or "feedburner" in RSS_URL or "feedburner" in obj.url:
+		# print "SCRAPER: Trying feedburner"
 		parsed = feedparser.parse(raw)
 		entries = parsed["entries"]
 		currentItems = []
 		for e in entries:
 			if isFBPassed(e["published"]):
 				currentItems.append(e["content"][0]["value"])	
+
 	# generic RSS method
 	else:
-		# split by item
-		raw = raw.split("<item>")[1:]
-
-		# if no item tag be sad and return for now
-		if not raw:
-			# print "Nothing called '<item>'"
-			return
-
+		# print "SCRAPER: Generic RSS method"
 		#filter out items based on time
 		currentItems = []
-		for l in raw:
+		for l in items:
 			if isPassed(l):
 				currentItems.append(l)
 
-	# scan for SC links and youtube links, SC currently returns data
-	soundcloud_data = getSoundCloudLinks(currentItems)
-	# youtube_data = getYoutubeLinks(currentItems)
+	if currentItems:
+		# scan for SC links.
+		soundcloud_data = getSoundCloudLinks(currentItems)
+		print "SCRAPER: SUCCESS ON",RSS_URL," # SONGS:",len(soundcloud_data)
+		return soundcloud_data
+	else:
+		print "SCRAPER: SUCCESS ON",RSS_URL," # SONGS: 0, no current items."
+		return
 
-	# print soundcloud_data
-	print "SCRAPER: SUCCESS ON",RSS_URL
-	print "SCRAPER: # SONGS:",len(soundcloud_data)
-	return soundcloud_data
 
+blogs = ["http://thissongissick.com",
+        "http://eqmusicblog.com",'http://gorillavsbear.net',
+        'http://potholesinmyblog.com', 'http://prettymuchamazing.com',
+        'http://disconaivete.com', 'http://doandroidsdance.com',
+        'http://www.npr.org/blogs/allsongs/','http://blogs.kcrw.com/musicnews/',
+        "http://www.edmsauce.com"]
 
-
-getMusicFromRSS("http://feeds.feedburner.com/eqmusicblog/HPsk")
+[getMusicFromRSS(getRSS(i)) for i in blogs]
