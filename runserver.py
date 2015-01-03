@@ -29,6 +29,16 @@ def add_group():
         error = "server"
     return json.dumps({"error":error})
 
+@app.route('/add/userToGroup', methods=['GET'])
+def add_user_to_group():
+    error = ""
+    groupID = request.args.get("groupID")
+    userID = request.args.get("userID")
+    result = db.add_user_to_group(userID,groupID)
+    if not result:
+        error = "server"
+    return json.dumps({"error":error})
+
 @app.route('/add/user/<userID>', methods=['GET'])
 def add_user(userID):
     s = False
@@ -71,6 +81,14 @@ def get_recommendations(userID):
     for i in raw_recs:
         results["recommendations"].append(sources.format_source_result(i))
     return json.dumps(results)
+
+@app.route('/get/group/<userID>', methods=['GET'])
+def get_group(userID):
+    # user_groups = db.get_user_groups(userID)
+    grp = db.GROUPS.find_one()
+    grp["_id"] = str(grp["_id"])
+    return {"groups":grp}
+
 
 @app.route('/startscraping', methods=['GET'])
 def startscraping():
