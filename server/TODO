@@ -5,10 +5,16 @@
 GROUPS:
 	- /add/group [POST]
 		name : name of the new group 
-		users : array of users to add to the group, each has a userID, FB profile picture, and username
+		users : array of users to add to the group, each has a userID.
 
 		Need to add the groupID (the mongoID) to the 'groups' field in the user.
 
+	- /add/group/user [GET]
+		userID : id of user to add to the group
+		groupID : id of the group to add the user
+
+		return success or failure 
+		
 	- /get/groups [GET]
 		userID : id of the user, fetch all groups this user is in
 
@@ -27,7 +33,7 @@ GROUPS:
 	- post_to_group(song,userID,groupID)
 		+ adds userID to song and adds the song to group
 		+ sends a push notifications to all the members of the group except for the user who sent the post.
-		
+
 -check the removing things -- make sure it removes user from USERS and user from any of the sources the user has.
 -change sc_id to sourceID
 -change username to title

@@ -17,6 +17,14 @@ def test3():
     return json.dumps(songs)
 ##################
 
+
+@app.route('/add/group', methods=['POST'])
+def add_group():
+    name = request.form["name"]
+    users = request.form["users"]
+    print name, users, request
+    return json.dumps({"error":""})
+
 @app.route('/add/user/<userID>', methods=['GET'])
 def add_user(userID):
     s = False
