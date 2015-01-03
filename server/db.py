@@ -11,6 +11,7 @@ db = client.get_default_database()
 SOURCES = db["sources"]
 USERS = db["users"]
 STATUS = db["status"]
+GROUPS = db["groups"]
 
 def get_user(user_id):
     user = USERS.find({"user_id":user_id})
@@ -21,6 +22,47 @@ def get_user_by_mongo_id(mongo_id):
     user = USERS.find({"_id":ObjectId(mongo_id)})
     if user.count() !=0:
         return user
+
+def add_group(name,users):
+    groupID = GROUPS.insert({"name":name,"users":users,"songs":[]})
+    if not groupID:
+        return False
+
+    # add the group ID to each user (each user is a user_id)
+    for i in users:
+        u = get_user(i)
+        if not u:
+            print "DB: Could not get user in add_group, not adding to group:",groupID,name
+            pass
+        u = u[0]
+        groups = u["groups"]
+        if groupID not in groups:
+            groups.append(groupID)
+            query = {"groups":groups}
+            res = USERS.update({'user_id':u["user_id"]},{"$set":query},upsert=False)
+            if not res:
+                print "DB: Could not add group to user:",u["_id"]
+    return True
+
+def remove_group(group_id):
+    if GROUPS.remove({"_id":group_id}):
+        return True
+    return False
+
+def remove_user_from_group(user_id,group_id):
+    group = GROUPS.find({'_id':group_id})
+    if group.count() == 0:
+        print "DB: unable to remove user:",user_id,"from group:",group_id
+        return False
+    users = group[0]["users"]
+    if user_id in users:
+        users.remove(user_id)
+        query = {"users":users}
+        res = GROUPS.update({'_id':group_id},{"$set":query},upsert=False)
+        if not res:
+            print "DB: Could not remove user:",user_id,"from group:",group_id
+            return False
+    return True
 
 def update_user_recommendations(user_id,new_recs):
     user = get_user(user_id)
@@ -50,7 +92,8 @@ def add_user(user_id):
     Adds a user if the user does not already exist.
     """
     if not get_user(user_id):
-        if USERS.insert({"user_id":user_id,"sources":[],"recommendations":[]}):
+        if USERS.insert({"user_id":user_id,"sources":[],
+            "recommendations":[],"groups":[]}):
             return True
     else:
         print "DB: User already exists, not adding."

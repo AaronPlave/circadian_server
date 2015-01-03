@@ -94,6 +94,12 @@ def format_add_result(source,data):
         del data["source"]["source_url"]
         del data["source"]["rss_url"]
 
+    if data["source"].get("sc_id"):
+        data["source"]["title"] = data["source"]["username"]
+        data["source"]["sourceID"] = data["source"]["sc_id"]
+        del data["source"]["username"]
+        del data["source"]["sc_id"]
+
     return data
 
 def format_source_result(source):
@@ -107,6 +113,12 @@ def format_source_result(source):
         source["sourceURL"] = source["source_url"]
         del source["source_url"]
         del source["rss_url"]
+
+    if source.get("sc_id"):
+        source["title"] = source["username"]
+        source["sourceID"] = source["sc_id"]
+        del source["username"]
+        del source["sc_id"]
 
    # turn the source object id into a string 
     source["_id"] = str(source["_id"])
