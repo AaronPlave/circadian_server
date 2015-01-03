@@ -85,11 +85,8 @@ def get_recommendations(userID):
 @app.route('/get/group/<userID>', methods=['GET'])
 def get_group(userID):
     # user_groups = db.get_user_groups(userID)
-    grp = db.GROUPS.find_one()
-    grp["_id"] = str(grp["_id"])
-    grp_users = grp["users"]
-    grp_users = [str(i) for i in grp_users]
-    return json.dumps({"groups":grp})
+    groups = db.get_groups_by_user_id(userID)
+    return json.dumps({"groups":groups})
 
 
 @app.route('/startscraping', methods=['GET'])

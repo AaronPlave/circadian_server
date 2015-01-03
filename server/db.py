@@ -23,6 +23,65 @@ def get_user_by_mongo_id(mongo_id):
     if user.count() !=0:
         return user
 
+def get_groups_by_user_id(user_id):
+    user = get_user(user_id)
+    if not user:
+        print "DB: Could not get user in get_group_by_user_id"
+        return 
+    user = user[0]
+    user_groups = user["groups"]
+    final_groups = []
+    for groupID in user_groups:
+        group = GROUPS.find({"_id":groupID})
+        if group.count() == 0:
+            print "DB: Unable to find group:",groupID
+            continue
+        group = group[0]
+        # a little formatting
+        group["_id"] = str(group["_id"])
+        group["users"] = [str(i) for i in group["users"]]
+        final_groups.append(group)
+    return final_groups
+
+def add_song_to_group(songID,sourceID,groupID,user_id):
+    """
+    Adds the song object with _id == songID found in the source w/_id == sourceID 
+    to the group with _id == groupID.
+    """
+    # get group
+    group = GROUPS.find({"_id":ObjectId(groupID)})
+    if group.count() == 0:
+        print "DB: Unable to find group:",groupID
+        return
+    group = group[0]
+
+    # get the source
+    source = get_source_by_id(ObjectId(sourceID))
+    if not source:
+        print "DB: Unable to find source for add_song_to_group"
+        return
+    source = source[0]
+
+    # find song in source
+    song_match = None
+    for i in source["songs"]:
+        if i["_id"] == songID:
+            song_match = i
+            break
+    if not song_match:
+        print "DB: Unable to find songID:",songID,"in source",sourceID,"can't add to group:",groupID
+        return
+    song_match["sourceID"] = str(song_match["sourceID"])
+    song_match["userID"] = str(user_id)
+    print song_match,"!!!!"
+    group["songs"].append(song_match)
+    
+    # add song to group
+    query = {"songs":group["songs"]}
+    res = GROUPS.update({'_id':ObjectId(groupID)},{"$set":query},upsert=False)
+    if res:
+        return True
+
 def add_group(name,users):
     # add the group ID to each user (each user is a user_id)
     user_objs = []
