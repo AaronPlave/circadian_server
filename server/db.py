@@ -97,7 +97,7 @@ def add_group(name,users):
         print "DB: add_group no valid users, not adding group"
         return False
 
-    valid_user_ids = [i["_id"] for i in user_objs]
+    valid_user_ids = [i["user_id"] for i in user_objs]
     groupID = GROUPS.insert({"name":name,"users":valid_user_ids,"songs":[]})
     if not groupID:
         print "DB: No group ID in add_group"
