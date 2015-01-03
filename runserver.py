@@ -82,7 +82,7 @@ def get_recommendations(userID):
         results["recommendations"].append(sources.format_source_result(i))
     return json.dumps(results)
 
-@app.route('/get/group/<userID>', methods=['GET'])
+@app.route('/get/groups/<userID>', methods=['GET'])
 def get_group(userID):
     # user_groups = db.get_user_groups(userID)
     groups = db.get_groups_by_user_id(userID)
