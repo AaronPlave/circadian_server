@@ -89,7 +89,7 @@ def get_group(userID):
     grp["_id"] = str(grp["_id"])
     grp_users = grp["users"]
     grp_users = [str(i) for i in grp_users]
-    return {"groups":grp}
+    return json.dumps({"groups":grp})
 
 
 @app.route('/startscraping', methods=['GET'])
