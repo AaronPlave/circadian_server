@@ -17,12 +17,13 @@ def test3():
     return json.dumps(songs)
 ##################
 
-
 @app.route('/add/group', methods=['POST'])
 def add_group():
-    name = request.form["name"]
-    users = request.form["users"]
-    print name, users, request
+    if not request.json:
+        return json.dumps({"error":"server"})
+        
+    name = request.json["name"]
+    users = request.json["users"]
     error = ""
     if not db.add_group(name,users):
         error = "server"
