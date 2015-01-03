@@ -25,25 +25,27 @@ def get_user_by_mongo_id(mongo_id):
 
 def add_group(name,users):
     # add the group ID to each user (each user is a user_id)
-    valid_users = []
+    user_objs = []
     for i in users:
         u = get_user(i)
         if u:
-            valid_users.append(u)
+            user_objs.append(u[0])
         else:
-            print users,i
-            users.remove(i)
-            print users,i
             print "DB: Could not get user in add_group, not adding to group:",name
     
-    groupID = GROUPS.insert({"name":name,"users":users,"songs":[]})
+    # if no valid users, why add the group
+    if len(user_objs) == 0:
+        print "DB: add_group no valid users, not adding group"
+        return False
+
+    valid_user_ids = [i["_id"] for i in user_objs]
+    groupID = GROUPS.insert({"name":name,"users":valid_user_ids,"songs":[]})
     if not groupID:
         print "DB: No group ID in add_group"
         return False
-    print valid_users
-    for u in valid_users:
+
+    for u in user_objs:
         groups = u["groups"]
-        valid_users.append(u["_id"])
         if groupID not in groups:
             groups.append(groupID)
             query = {"groups":groups}
@@ -56,6 +58,14 @@ def add_user_to_group(user_id,group_id):
     """
     Adds user to group and group to user.
     """
+    # get user
+    user = get_user(user_id)
+    if not user:
+        print "DB: Could not get user in add_user_to_group"
+        return
+    user = user[0]
+    user_mongo_id = user["_id"]
+
     # add user to group
     group = GROUPS.find({"_id":group_id})
     if group.count() == 0:
@@ -63,26 +73,20 @@ def add_user_to_group(user_id,group_id):
         return False
     group = group[0]
     group_users = group["users"]
-    if user_id not in group_users:
-        group_users.append(user_id)
+    if user_mongo_id not in group_users:
+        group_users.append(user_mongo_id)
         query = {"users":group_users}
         res = GROUPS.update({'_id':group_id},{"$set":query},upsert=False)
         if not res:
             print "DB: Could not add user:",user_id,"to group:",group_id
             return False
-
+    
     # add group to user
-    user = get_user(user_id)
-    if not user:
-        print "DB: Could not get user in add_user_to_group"
-        return
-
-    user = user[0]
     user_groups = user["groups"]
     if group_id not in user_groups:
         user_groups.append(group_id)
         query = {"groups":user_groups}
-        res = USERS.update({'_id':user_id},{"$set":query},upsert=False)
+        res = USERS.update({'_id':user_mongo_id},{"$set":query},upsert=False)
         if not res:
             print "DB: Could not add group:",group_id,"to user:",user_id
             return False
@@ -94,35 +98,39 @@ def remove_group(group_id):
     return False
 
 def remove_user_from_group(user_id,group_id):
+    # get user
+    user = get_user(user_id)
+    if not user:
+        print "DB: Couldn't get user in remove user from group"
+        return False
+    user_mongo_id = user[0]["_id"]
+
     # remove the group from the user
     group = GROUPS.find({'_id':group_id})
     if group.count() == 0:
         print "DB: unable to remove user:",user_id,"from group:",group_id
         return False
     users = group[0]["users"]
-    if user_id in users:
-        users.remove(user_id)
+    if user_mongo_id in users:
+        print users,"u1"
+        users.remove(user_mongo_id)
 
         #if the group has no more users, delete it
-
         if len(users) == 0:
-            return remove_group(group_id)
-
-        query = {"users":users}
-        if not GROUPS.update({'_id':group_id},{"$set":query},upsert=False):
-            print "DB: Could not remove user:",user_id,"from group:",group_id
-            return False
+            remove_group(group_id)
+        else:
+            print users,"u2"
+            query = {"users":users}
+            if not GROUPS.update({'_id':group_id},{"$set":query},upsert=False):
+                print "DB: Could not remove user:",user_id,"from group:",group_id
+                return False
 
         # remove the group from the user
-        user = get_user
-        if not user:
-            print "DB: Couldn't get user in remove user from group"
-            return False
         user_groups = user[0]["groups"]
         if group_id in user_groups:
             user_groups.remove(group_id)
             query = {"groups":user_groups}
-            res = USERS.update({'_id':user_id},{"$set":query},upsert=False)
+            res = USERS.update({'_id':user_mongo_id},{"$set":query},upsert=False)
             if not res:
                 print "DB: Could not remove group:",group_id,"from user:",user_id
                 return False

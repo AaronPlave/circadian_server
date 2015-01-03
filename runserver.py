@@ -23,7 +23,10 @@ def add_group():
     name = request.form["name"]
     users = request.form["users"]
     print name, users, request
-    return json.dumps({"error":""})
+    error = ""
+    if not db.add_group(name,users):
+        error = "server"
+    return json.dumps({"error":error})
 
 @app.route('/add/user/<userID>', methods=['GET'])
 def add_user(userID):
