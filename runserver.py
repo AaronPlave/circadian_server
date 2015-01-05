@@ -94,6 +94,12 @@ def startscraping():
     sources.refresh_handler()
     return "scraping"
 
+@app.route('/cleardb', methods=['GET'])
+def cleardb():
+    db.remove_all()
+    return "True"
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 
