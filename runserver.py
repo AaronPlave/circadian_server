@@ -29,13 +29,28 @@ def add_group():
         error = "server"
     return json.dumps({"error":error})
 
-@app.route('/add/userToGroup', methods=['GET'])
+@app.route('/add/groupuser', methods=['GET'])
 def add_user_to_group():
     error = ""
     groupID = request.args.get("groupID")
     userID = request.args.get("userID")
     result = db.add_user_to_group(userID,groupID)
     if not result:
+        error = "server"
+    return json.dumps({"error":error})
+
+@app.route('/add/groupsong', methods=['GET'])
+def add_song_to_group():
+    error = ""
+    groupID = request.args.get("groupID")
+    userID = request.args.get("userID")
+    songID = request.args.get("songID")
+    sourceID = request.args.get("sourceID")
+    try:
+        result = db.add_song_to_group(songID,sourceID,groupID,userID)
+        if not result:
+            error = "server"
+    except:
         error = "server"
     return json.dumps({"error":error})
 
@@ -84,7 +99,6 @@ def get_recommendations(userID):
 
 @app.route('/get/groups/<userID>', methods=['GET'])
 def get_group(userID):
-    # user_groups = db.get_user_groups(userID)
     groups = db.get_groups_by_user_id(userID)
     return json.dumps({"groups":groups})
 

@@ -1,6 +1,5 @@
 -handle non-http/https blog names
 -modify add_song_to_source -> add songs to one source to reduce the number of db lookups. 
--DELETE EVERYTHING OLDER THAN TIME_DELTA
 
 GROUPS:
 	- /add/group [POST]
@@ -25,15 +24,7 @@ GROUPS:
 			users : users in a group, represented by userID
 			songs : an array of songs, each with a field 'user' representing the userID who posted the song, and a field 'date' representing post date. 
 
-	- update_groups() a method to update groups by getting rid of all songs in each group older than date + 24 hours 
-	- get_group_by_id(groupID) 
-	- remove_group(groupID)
-	- remove_user_from_group(userID,groupID)
-	- create_group(name,users)
 	- post_to_group(song,userID,groupID)
-		+ adds userID to song and adds the song to group
-		+ sends a push notifications to all the members of the group except for the user who sent the post.
+		- sends a push notifications to all the members of the group except for the user who sent the post.
 
 -check the removing things -- make sure it removes user from USERS and user from any of the sources the user has.
--change sc_id to sourceID
--change username to title

@@ -1,6 +1,8 @@
 import pymongo
 import os
+import datetime
 from bson.objectid import ObjectId
+from scraping import TIME_DELTA
 
 MONGO_URI = os.environ.get('MONGOLAB_URI')
 if not MONGO_URI:
@@ -73,7 +75,7 @@ def add_song_to_group(songID,sourceID,groupID,user_id):
         return
     song_match["sourceID"] = str(song_match["sourceID"])
     song_match["userID"] = str(user_id)
-    print song_match,"!!!!"
+    song_match["postDate"] = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     group["songs"].append(song_match)
     
     # add song to group
@@ -294,6 +296,59 @@ def remove_all_sources():
     else:
         print "Unable to remove all sources"
 
+def remove_old_songs():
+    current_time = datetime.datetime.now()
+    for i in SOURCES.find():
+        source_songs = i["songs"]
+        songs_to_rmv = []
+        for j in source_songs:
+            j_date = j["date"]
+            j_date = j_date.split()
+            j_date = " ".join(j_date[0:len(j_date)-1])
+            j_date = datetime.datetime.strptime(j_date, '%Y/%m/%d %H:%M:%S')
+            delta = current_time - j_date
+            hours = (delta.days*24)+(delta.seconds/60.0/60.0)
+            if hours > TIME_DELTA:
+                songs_to_rmv.append(j)
+
+        # if no old songs, done!
+        if len(songs_to_rmv) == 0:
+            continue
+
+        for j in songs_to_rmv:
+            source_songs.remove(j)
+        query = {"songs":source_songs}
+        if not SOURCES.update({'_id':i["_id"]},{"$set":query},upsert=False):
+            print "DB: Unable to remove old songs, update failed in source:", i["sourceID"]
+
+    return True
+
+def remove_old_group_songs():
+    for i in GROUPS.find():
+        group_songs = i["songs"]
+        songs_to_rmv = []
+        for j in group_songs:
+            post_date = datetime.datetime.strptime(j["postDate"],"%Y-%m-%d %H:%M:%S")
+            j_date = j["date"]
+            j_date = j_date.split()
+            j_date = " ".join(j_date[0:len(j_date)-1])
+            j_date = datetime.datetime.strptime(j_date, '%Y/%m/%d %H:%M:%S')
+            delta = post_date - j_date
+            hours = (delta.days*24)+(delta.seconds/60.0/60.0)
+            if hours > TIME_DELTA:
+                songs_to_rmv.append(j)
+
+        # if no old group songs, done!
+        if len(songs_to_rmv) == 0:
+            continue
+
+        for j in songs_to_rmv:
+            group_songs.remove(j)
+        query = {"songs":group_songs}
+        if not GROUPS.update({'_id':i["_id"]},{"$set":query},upsert=False):
+            print "DB: Unable to remove old group songs, update failed in source:", i["sourceID"]
+
+    return True
 
 def format_id(song):
     """

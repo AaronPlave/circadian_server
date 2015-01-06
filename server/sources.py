@@ -192,78 +192,42 @@ def refresh_sources(x):
         print "REFRESHER: NO SOURCES FOUND, WAITING"
         time.sleep(SLEEP_TIME)
         refresh_sources()
-    print "REFRESHER: SCRAPING SONGS"
-    sources_to_scrape = [(i["_id"],i["rss_url"]) for i in sources]
-    print sources_to_scrape
-    [scraping.scrape_current_source(i) for i in sources_to_scrape]
-    print "REFRESHER: SCRAPED SOURCES"
+
+    try:
+        print "REFRESHER: SCRAPING SONGS"
+        sources_to_scrape = [(i["_id"],i["rss_url"]) for i in sources]
+        print sources_to_scrape
+        [scraping.scrape_current_source(i) for i in sources_to_scrape]
+        print "REFRESHER: SCRAPED SOURCES"
+    except Exception, e:
+        print "REFRESHER: Failed to scrape sources, error:",e
+
     print "REFRESHER: BUILDING RECOMMENDATIONS"
-    recs_built = build_recommendations()
-    if not recs_built:
-        print "REFRESHER: FAIL: UNABLE TO BUILD RECOMMENDATIONS"
-    print "REFRESHER: SUCCESSFULY SCRAPED SOURCES AND BUILT RECS, SLEEPING"
+    try:
+        recs_built = build_recommendations()
+        if not recs_built:
+            print "REFRESHER: FAIL: UNABLE TO BUILD RECOMMENDATIONS"
+    except Exception,e:
+        print "REFRESHER: Failed to build recommendations, error:",e
+    
+    print "REFRESHER: CLEARING OLD SONGS"
+    old_songs_removed = db.remove_old_songs()
+    if not old_songs_removed:
+        print "REFRESHER: FAILED TO REMOVE OLD SONGS FROM DB."
+
+    old_group_songs_removed = db.remove_old_group_songs()
+    if not old_group_songs_removed:
+        print "REFRESHER: FAILED TO REMOVE OLD GROUP SONGS FROM DB."
+    
+    print "REFRESHER: SUCCESSFULY SCRAPED SOURCES, BUILT RECS, CLEANED DB OF OLD SONGS AND GROUP SONGS, SLEEPING"
     time.sleep(SLEEP_TIME)
     refresh_sources(x)
+
 
 def refresh_handler():
     print "REFRESH HANDLER: Starting source refresh process"
     pool = multiprocessing.Pool(1)
     pool.map_async(refresh_sources,("0"))
-
-def test():
-    """
-    Simulates stuff
-    """
-    #clear sources
-    print "TEST: dropping db"
-    db.SOURCES.drop()
-
-    #clear users
-    print "TEST: dropping users"
-    db.USERS.drop()
-
-    print "TEST: adding user '1' "
-    db.add_user("1")
-    
-    print "TEST: verifying user 1 is in db"
-    if not db.get_user("1"):
-        print "TEST: No user '1' found"
-        return False
-    print "TEST: found user 1"
-
-    # Add source
-    blogs = ["http://thissongissick.com",
-        "http://eqmusicblog.com",'http://gorillavsbear.net',
-        'http://potholesinmyblog.com', 'http://prettymuchamazing.com',
-        'http://disconaivete.com', 'http://doandroidsdance.com',
-        'http://www.npr.org/blogs/allsongs/','http://blogs.kcrw.com/musicnews/',
-        "http://www.edmsauce.com"]
-
-    # blogs = ["http://www.npr.org/blogs/allsongs/"]
-
-    print "TEST: scraping sources"
-    results = [add_blog_source(i,"1") for i in blogs]
-
-    # stop test if no sources succeeded
-    cont = False
-    for i in results:
-        if i:
-            cont = True
-            continue 
-    if not cont:
-        "TEST: No sources succeeded, unable to continue test." 
-        return False
-
-    # add a source to user
-    s = db.list_sources()[0]["_id"]
-
-    print "TEST: verifying user has that source"
-    print "TEST: User has source:",s in db.get_user("1")[0]["sources"]
-    
-    print "TEST: getting user's songs"
-    return db.get_user_songs("1")
-
-
 
 def test3():
     print "TEST: dropping all DBs"
@@ -304,4 +268,4 @@ def test3():
 
     print "TEST: getting recommendations"
     print build_recommendations()
-    return ""
+    return "test3 passed"
