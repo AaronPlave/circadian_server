@@ -2,7 +2,6 @@ import json
 from flask import Flask,request
 from server import sources, db
 app = Flask(__name__)
-sources.refresh_handler()
 
 def format_songs(songs):
     return {'songs':songs}
