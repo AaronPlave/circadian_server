@@ -44,12 +44,14 @@ def get_groups_by_user_id(user_id):
             group_users = list(USERS.find({"user_id":{"$in":group["users"]}}))
             print group_users,"DB: group users"
             for i in group_users:
-                print "\n",i,"i"
                 del i["_id"]
                 del i["groups"]
                 del i["recommendations"]
                 del i["sources"]
                 del i["deviceTokens"]
+                i["userID"] = i["user_id"]
+                del i["user_id"]
+
             group["users"] = group_users
         # a little formatting
         group["_id"] = str(group["_id"])
@@ -235,20 +237,16 @@ def add_user(user_id,profilePictureURL,name,deviceToken):
     """
     Adds a user if the user does not already exist.
     """
-    print "ADDING USER!"
     u = get_user(user_id)
     if not u:
-        print "ADDING USER 1"
-        if USERS.insert({"user_id":user_id,"sources":[],
-            "recommendations":[],"groups":[],"profilePictureURL":profilePictureURL,
+        if USERS.insert({"user_id":user_id,"sources":[],"recommendations":[],
+            "groups":[],"profilePictureURL":profilePictureURL,
             "name":name,"deviceTokens":[deviceToken]}):
-            print "ADDING USER 2"
             return True
         else:
             print "DB: Unable to insert new user."
             return False
     else:
-        print "ADDING USER 3"
         print "DB: User already exists, checking for updates."
         query = {}
         print "DB:",deviceToken,profilePictureURL,name,u
