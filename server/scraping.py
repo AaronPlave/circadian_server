@@ -5,9 +5,10 @@ import json
 import db
 import uuid
 import urlparse
-from datetime import datetime
 import feedparser
+from datetime import datetime
 feedparser._HTMLSanitizer.acceptable_elements.add("iframe")
+# socket.setdefaulttimeout()
 
 # id:"a9c272921e809f861f1951ea6ff1f829"
 # secret:@"6d4cea605ed5e4c48bec8a48ef545310"
@@ -35,10 +36,11 @@ def scrape_new_source(data):
 	# check source_url
 	parsed_url = urlparse.urlparse(source_url)
 	if not parsed_url.scheme in ["http","https"]:
-		source_url = "http://"+source_url
-
+		new_source_url = "http://"+source_url
+	else:
+		new_source_url = source_url
 	print "SCRAPER: GETTING RSS URL"
-	rss_url = getRSS(source_url)
+	rss_url = getRSS(new_source_url)
 	if rss_url in ("user","server"):
 		print "SCRAPER: NO RSS"
 		return rss_url
@@ -63,7 +65,7 @@ def scrape_new_source(data):
 
 	# update last update time in status
 	db.set_last_update_time(datetime.now())
-	return "good"
+	return "good",sourceID
 
 def scrape_current_source(data):
 	sourceID = data[0]

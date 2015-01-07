@@ -453,7 +453,6 @@ def add_song_to_source(song_data,sourceID):
     Song is a dictionary returned from the scraper. Song is added if does
     not already exist in the db under the specified streamURL.
     """
-    print song_data,type(song_data)
     if not song_data:
         return
     opt_fields = ["_id","title", "genre", "streamURL", "artworkURL", "date","artist"]

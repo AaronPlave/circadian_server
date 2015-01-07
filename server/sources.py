@@ -84,7 +84,6 @@ def build_recommendations():
     return success
 
 def format_add_result(source,data):
-    print source
     songs_raw = source["songs"]
     songs = db.format_ids(songs_raw)
     source["songs"] = songs
@@ -102,7 +101,7 @@ def format_add_result(source,data):
         data["source"]["sourceID"] = data["source"]["sc_id"]
         del data["source"]["username"]
         del data["source"]["sc_id"]
-
+    print "DATA",data
     return data
 
 def format_source_result(source):
@@ -132,10 +131,11 @@ def format_source_result(source):
     return source 
 
 def add_blog_source(source_url,user_id):
+    print "DB: adding blog source"
     data = {"error":""}
     result = db.get_source_by_url(source_url)
-
     if result:
+        print "GOT CACHED"
         # add user to source and source to user
         if db.link_source_and_user(result[0]["_id"],user_id):
             return format_add_result(result[0],data)
@@ -150,12 +150,17 @@ def add_blog_source(source_url,user_id):
     success = pool.map(scraping.scrape_new_source,[[source_url,user_id]])
     #result will either be 'good' for no problems, 'user' for an unreachable
     # url, or 'server' if we can't find an RSS link.
-    if success[0] == "good":
-        result = db.get_source_by_url(source_url)
+    print success, "SUCC"
+    if success[0][0] == "good":
+        sourceID = success[0][1]
+        result = db.get_source_by_id(sourceID)
+        print "RESULT:",result
         if result:
+            print result,"!"
             return format_add_result(result[0],data)
 
-    data["error"] = success[0]
+    data["error"] = success[0][0]
+    # print data,"DATA"
     return data
 
 def add_sc_source(sc_id, user_id):
