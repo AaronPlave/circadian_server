@@ -15,7 +15,7 @@ import sc_lib
 from pyapns.apns import APNs, Frame, Payload
 from collections import Counter
 
-REFRESH_WAIT_MINUTES = 15 
+REFRESH_WAIT_MINUTES = 15
 
 apns = APNs(use_sandbox=False,cert_file='cert.pem',key_file='key.pem')
 
@@ -283,7 +283,7 @@ def test3():
     print "TEST: adding users"
     NUM_USERS = 10
     users = [str(i) for i in range(NUM_USERS)]
-    add_user_result = reduce(lambda x,y: x and y, [db.add_user(i) for i in users])
+    add_user_result = reduce(lambda x,y: x and y, [db.add_user(i,"asdasdas","some name"+str(i),[]) for i in users])
     if not add_user_result:
         print "TEST: FAIL: ADD USERS"
 
@@ -311,7 +311,7 @@ def test3():
 
 
     print "TEST: adding new user to test for no sources"
-    db.add_user("some_person")
+    db.add_user("some_person","asdasdas","some name",[])
 
     print "TEST: getting recommendations"
     print build_recommendations()

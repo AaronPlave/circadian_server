@@ -39,9 +39,20 @@ def get_groups_by_user_id(user_id):
             print "DB: Unable to find group:",groupID
             continue
         group = group[0]
+        # get all the users
+        if group["users"]:
+            group_users = list(USERS.find({"user_id":{"$in":group["users"]}}))
+            print group_users,"DB: group users"
+            for i in group_users:
+                print "\n",i,"i"
+                del i["_id"]
+                del i["groups"]
+                del i["recommendations"]
+                del i["sources"]
+                del i["deviceTokens"]
+            group["users"] = group_users
         # a little formatting
         group["_id"] = str(group["_id"])
-        group["users"] = [str(i) for i in group["users"]]
         final_groups.append(group)
     return final_groups
 

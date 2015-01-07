@@ -59,7 +59,7 @@ def add_song_to_group():
 @app.route('/add/user', methods=['GET'])
 def add_user(userID):
     userID = request.args.get("userID")
-    picURL = request.args.get("picURL")
+    picURL = request.args.get("profilePictureURL")
     name = request.args.get("name")
     deviceToken = request.args.get("deviceToken")
     s = False
