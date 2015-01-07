@@ -15,7 +15,7 @@ import sc_lib
 from pyapns.apns import APNs, Frame, Payload
 from collections import Counter
 
-REFRESH_WAIT_MINUTES = 15
+REFRESH_WAIT_MINUTES = 1
 
 apns = APNs(use_sandbox=False,cert_file='cert.pem',key_file='key.pem')
 
