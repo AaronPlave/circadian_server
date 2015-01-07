@@ -57,11 +57,14 @@ def add_song_to_group():
     return json.dumps({"error":error})
 
 @app.route('/add/user', methods=['GET'])
-def add_user(userID):
+def add_user():
+    print "!!!!"
+    print request.args
     userID = request.args.get("userID")
     picURL = request.args.get("profilePictureURL")
     name = request.args.get("name")
     deviceToken = request.args.get("deviceToken")
+    print user_id,picURL,name,deviceToken
     s = False
     if db.add_user(user_id=userID,picURL=picURL,name=name,deviceToken=deviceToken):
         s = True

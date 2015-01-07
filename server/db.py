@@ -29,7 +29,7 @@ def get_groups_by_user_id(user_id):
     user = get_user(user_id)
     if not user:
         print "DB: Could not get user in get_group_by_user_id"
-        return 
+        return []
     user = user[0]
     user_groups = user["groups"]
     final_groups = []
