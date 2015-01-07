@@ -231,14 +231,14 @@ def get_user_recommendations(user_id):
         full_recs.append(source[0])
     return full_recs
 
-def add_user(user_id,picURL,name,deviceToken):
+def add_user(user_id,profilePictureURL,name,deviceToken):
     """
     Adds a user if the user does not already exist.
     """
     u = get_user(user_id)
     if not u:
         if USERS.insert({"user_id":user_id,"sources":[],
-            "recommendations":[],"groups":[],"picURL":picURL,
+            "recommendations":[],"groups":[],"profilePictureURL":profilePictureURL,
             "name":name,"deviceTokens":[deviceToken]}):
             return True
         else:
@@ -247,11 +247,11 @@ def add_user(user_id,picURL,name,deviceToken):
     else:
         print "DB: User already exists, checking for updates."
         query = {}
-        print "DB:",deviceToken,picURL,name,u
+        print "DB:",deviceToken,profilePictureURL,name,u
         if deviceToken not in u["deviceTokens"]:
             query["deviceToken"].append(deviceToken)
-        if u["picURL"] != picURL:
-            query["picURL"] = picURL
+        if u["profilePictureURL"] != profilePictureURL:
+            query["profilePictureURL"] = profilePictureURL
         if u["name"] != name:
             query["name"] = name
         if query:
