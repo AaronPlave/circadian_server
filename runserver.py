@@ -62,14 +62,14 @@ def add_user():
     if not request.json:
         return "FAILURE!"
     print "2"
-        
-    userID = request.json["userID"]
+    print request.json,"JSON"
+    userID = request.json.get("userID")
     print "3"
-    picURL = request.json["profilePictureURL"]
+    picURL = request.json.get("profilePictureURL")
     print "4"
-    name = request.json["name"]
+    name = request.json.get("name")
     print "5"
-    deviceToken = request.json["deviceToken"]
+    deviceToken = request.json.get("deviceToken")
     print "6"
     s = False
     if db.add_user(user_id=userID,picURL=picURL,name=name,deviceToken=deviceToken):
