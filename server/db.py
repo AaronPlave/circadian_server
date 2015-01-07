@@ -248,13 +248,14 @@ def add_user(user_id,profilePictureURL,name,deviceToken):
     else:
         print "DB: User already exists, checking for updates."
         query = {}
-        print "DB:",deviceToken,profilePictureURL,name,u
-        if deviceToken not in u["deviceTokens"]:
+        print "DB:",deviceToken,profilePictureURL,name,u[0]
+        if deviceToken not in u[0]["deviceTokens"]:
             query["deviceToken"].append(deviceToken)
-        if u["profilePictureURL"] != profilePictureURL:
+        if u[0]["profilePictureURL"] != profilePictureURL:
             query["profilePictureURL"] = profilePictureURL
-        if u["name"] != name:
+        if u[0]["name"] != name:
             query["name"] = name
+        print "DB: QUERY:",query
         if query:
             print "DB: Updating user:",user_id,name
             if USERS.update({'user_id':user_id},{"$set":query},upsert=False):
