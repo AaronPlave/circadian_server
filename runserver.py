@@ -65,10 +65,10 @@ def add_user():
     profilePictureURL = request.json.get("profilePictureURL")
     name = request.json.get("name")
     deviceToken = request.json.get("deviceToken")
-    s = False
-    if db.add_user(user_id=userID,profilePictureURL=profilePictureURL,name=name,deviceToken=deviceToken):
-        s = True
-    return json.dumps({"ADD":s})
+    add_result = db.add_user(user_id=userID,profilePictureURL=profilePictureURL,name=name,deviceToken=deviceToken)
+    build_result = sources.build_user_recommendations(userID)
+    success = add_result and build_result
+    return json.dumps({"ADD":success})
 
 # add blog source
 @app.route('/add/source/blog', methods=['GET'])

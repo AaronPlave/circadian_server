@@ -1,7 +1,4 @@
 IMPORTANT: make thiswebsite.com == http://thiswebsite.com!!
-	-build recommendations for a user AFTER they are ADDED!
-	-Make sure user info is actually updated TEST WITH PHIL
-	-Generate a new unique id for a song every time it is posted to a group
 
 SECONDARY:
 	-modify add_song_to_source -> add songs to one source to reduce the number of db lookups.

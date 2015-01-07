@@ -78,10 +78,11 @@ def build_recommendations():
     """
     Builds recommendations for each user in the db. If any fail, return False.
     """
-    success = True
+    fail = False
     for u in db.USERS.find():
-        success = build_user_recommendations(u["user_id"])
-    return success
+        if not build_user_recommendations(u["user_id"]):
+            fail = True
+    return fail
 
 def format_add_result(source,data):
     songs_raw = source["songs"]
