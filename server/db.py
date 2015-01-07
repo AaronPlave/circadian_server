@@ -235,16 +235,20 @@ def add_user(user_id,profilePictureURL,name,deviceToken):
     """
     Adds a user if the user does not already exist.
     """
+    print "ADDING USER!"
     u = get_user(user_id)
     if not u:
+        print "ADDING USER 1"
         if USERS.insert({"user_id":user_id,"sources":[],
             "recommendations":[],"groups":[],"profilePictureURL":profilePictureURL,
             "name":name,"deviceTokens":[deviceToken]}):
+            print "ADDING USER 2"
             return True
         else:
             print "DB: Unable to insert new user."
             return False
     else:
+        print "ADDING USER 3"
         print "DB: User already exists, checking for updates."
         query = {}
         print "DB:",deviceToken,profilePictureURL,name,u
