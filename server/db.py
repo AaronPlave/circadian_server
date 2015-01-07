@@ -220,16 +220,38 @@ def get_user_recommendations(user_id):
         full_recs.append(source[0])
     return full_recs
 
-def add_user(user_id):
+def add_user(user_id,picURL,name,deviceToken):
     """
     Adds a user if the user does not already exist.
     """
-    if not get_user(user_id):
+    u = get_user(user_id)
+    if not u:
         if USERS.insert({"user_id":user_id,"sources":[],
-            "recommendations":[],"groups":[]}):
+            "recommendations":[],"groups":[],"picURL":picURL,
+            "name":name,"deviceTokens":[deviceToken]}):
             return True
+        else:
+            print "DB: Unable to insert new user."
+            return False
     else:
-        print "DB: User already exists, not adding."
+        print "DB: User already exists, checking for updates."
+        query = {}
+        if deviceToken not in u["deviceTokens"]:
+            query["deviceToken"].append(deviceToken)
+        if u["picURL"] != picURL:
+            query["picURL"] = picURL
+        if u["name"] != name:
+            query["name"] = name
+        if query:
+            print "DB: Updating user:",user_id,name
+            if USERS.update({'user_id':user_id},{"$set":query},upsert=False):
+                return True
+            else:
+                print "DB: Unable to update old user."
+                return False
+        else:
+            print "DB: Nothing to update for user:",user_id,name
+
 
 def remove_user(user_id):
     if get_user(user_id):

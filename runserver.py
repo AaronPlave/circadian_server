@@ -48,16 +48,22 @@ def add_song_to_group():
     sourceID = request.args.get("sourceID")
     try:
         result = db.add_song_to_group(songID,sourceID,groupID,userID)
-        if not result:
+        sent = sources.group_notification(userID,groupID)
+        if not result or not sent:
             error = "server"
-    except:
+    except Exception,e:
+        print "EXCEPTION ADDING GROUPSONG:",e
         error = "server"
     return json.dumps({"error":error})
 
-@app.route('/add/user/<userID>', methods=['GET'])
+@app.route('/add/user', methods=['GET'])
 def add_user(userID):
+    userID = request.args.get("userID")
+    picURL = request.args.get("picURL")
+    name = request.args.get("name")
+    deviceToken = request.args.get("deviceToken")
     s = False
-    if db.add_user(userID):
+    if db.add_user(user_id=userID,picURL=picURL,name=name,deviceToken=deviceToken):
         s = True
     return json.dumps({"ADD":s})
 

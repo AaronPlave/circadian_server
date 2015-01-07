@@ -31,6 +31,12 @@ def scrape_new_source(data):
 	# theory scrape it (plus, we don't have a way of knowing 
 	# if the blog will successfully yield songs since these blogs
 	# have highly variable soundcloud link yields to begin with.
+
+	# check source_url
+	parsed_url = urlparse.urlparse(source_url)
+	if not parsed_url.scheme in ["http","https"]:
+		source_url = "http://"+source_url
+
 	print "SCRAPER: GETTING RSS URL"
 	rss_url = getRSS(source_url)
 	if rss_url in ("user","server"):
@@ -38,7 +44,7 @@ def scrape_new_source(data):
 		return rss_url
 
 	# figure out title of source by looking at source_url
-	tmp_title = urlparse.urlparse(source_url).hostname
+	tmp_title = parsed_url.hostname
 	title = tmp_title if tmp_title else source_url
 
 	# got an RSS so add the source to the db
@@ -86,6 +92,12 @@ def fetchPage(url):
 		return raw
 	except Exception, e:
 		print "SCRAPING: Unable to fetch url",url, "ERROR:",e
+
+def resolveURL(url):
+	"""
+	Checks the url for validity, if invalid, add http://
+	"""
+
 
 def getRSS(blogUrl):
 	try:

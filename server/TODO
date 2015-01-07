@@ -1,5 +1,6 @@
 -handle non-http/https blog names
--modify add_song_to_source -> add songs to one source to reduce the number of db lookups. 
+-modify add_song_to_source -> add songs to one source to reduce the number of db lookups.
+-add timeout to getRSS/scraping requests 
 
 GROUPS:
 	- /add/group [POST]

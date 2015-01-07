@@ -10,11 +10,14 @@ import db
 import time
 import multiprocessing
 import scraping
-from collections import Counter
 import random
 import sc_lib
+from pyapns.apns import APNs, Frame, Payload
+from collections import Counter
 
 REFRESH_WAIT_MINUTES = 15 
+
+apns = APNs(use_sandbox=False,cert_file='cert.pem',key_file='key.pem')
 
 
 def get_most_popular_sources(user_sources):
@@ -183,6 +186,50 @@ def add_sc_source(sc_id, user_id):
     data["error"] = success[0]
     return data
 
+def group_notification(user_id,groupID):
+    """
+    Sends a notification to the users in a group (except the origin user).
+    """
+    # get the group
+    grp = db.GROUPS.find({"_id":db.ObjectId(groupID)})
+    if grp.count() == 0:
+        print "SOURCES: Could not find group:",groupID,"in send_notification"
+        return False
+    grp_users = grp[0]["users"]
+    if not grp_users:
+        return True
+
+    # remove user_id from grp_users
+    if user_id in grp_users:
+        grp_users.remove(user_id)
+    else:
+        print "SOURCES: Uh oh, user_id not in the group it's supposed to be in..."
+        return False
+  
+    # get all in the group
+    users = db.USERS.find({"user_id":{"$in":grp_users}})
+    if users.count() == 0:
+        print "SOURCES: No other users in group besides sender, not notifying."
+        return True
+    if users.count() != len(grp_users):
+        print "SOURCES: Did not find all the users in the group, CONCERN!"
+
+    # get list of device tokens to send a message to
+    deviceTokens = []
+    for i in users:
+        deviceTokens.extend(i["deviceTokens"])
+
+    # send notification to all of the users
+    frame = Frame()
+    identifier = 1
+    expiry = time.time()+3600
+    priority = 10
+    payload = Payload(alert="Hello World!", sound="default", badge=1)
+    for i in deviceTokens:
+        frame.add_item(deviceTokens, payload, identifier, expiry, priority)
+    apns.gateway_server.send_notification_multiple(frame)
+    print "SOURCES: Send multiple notifications."
+    return True
 
 def refresh_sources(x):
     SLEEP_TIME = REFRESH_WAIT_MINUTES*60  #convert to seconds
