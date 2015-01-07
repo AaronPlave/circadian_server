@@ -112,10 +112,10 @@ def get_group(userID):
     return json.dumps({"groups":groups})
 
 
-@app.route('/startscraping', methods=['GET'])
-def startscraping():
-    sources.refresh_handler()
-    return "scraping"
+# @app.route('/startscraping', methods=['GET'])
+# def startscraping():
+#     sources.refresh_handler()
+#     return "scraping"
 
 @app.route('/cleardb', methods=['GET'])
 def cleardb():
@@ -124,5 +124,6 @@ def cleardb():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    sources.refresh_handler()
+    app.run()
 

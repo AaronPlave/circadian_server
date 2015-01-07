@@ -78,11 +78,11 @@ def build_recommendations():
     """
     Builds recommendations for each user in the db. If any fail, return False.
     """
-    fail = False
+    success = True
     for u in db.USERS.find():
         if not build_user_recommendations(u["user_id"]):
-            fail = True
-    return fail
+            success = False
+    return success
 
 def format_add_result(source,data):
     songs_raw = source["songs"]
@@ -102,7 +102,6 @@ def format_add_result(source,data):
         data["source"]["sourceID"] = data["source"]["sc_id"]
         del data["source"]["username"]
         del data["source"]["sc_id"]
-    print "DATA",data
     return data
 
 def format_source_result(source):
@@ -136,7 +135,6 @@ def add_blog_source(source_url,user_id):
     data = {"error":""}
     result = db.get_source_by_url(source_url)
     if result:
-        print "GOT CACHED"
         # add user to source and source to user
         if db.link_source_and_user(result[0]["_id"],user_id):
             return format_add_result(result[0],data)
@@ -151,13 +149,10 @@ def add_blog_source(source_url,user_id):
     success = pool.map(scraping.scrape_new_source,[[source_url,user_id]])
     #result will either be 'good' for no problems, 'user' for an unreachable
     # url, or 'server' if we can't find an RSS link.
-    print success, "SUCC"
     if success[0][0] == "good":
         sourceID = success[0][1]
         result = db.get_source_by_id(sourceID)
-        print "RESULT:",result
         if result:
-            print result,"!"
             return format_add_result(result[0],data)
 
     data["error"] = success[0][0]
@@ -249,7 +244,6 @@ def refresh_sources(x):
     try:
         print "REFRESHER: SCRAPING SONGS"
         sources_to_scrape = [(i["_id"],i["rss_url"]) for i in sources]
-        print sources_to_scrape
         [scraping.scrape_current_source(i) for i in sources_to_scrape]
         print "REFRESHER: SCRAPED SOURCES"
     except Exception, e:
@@ -320,5 +314,7 @@ def test3():
     db.add_user("some_person","asdasdas","some name",[])
 
     print "TEST: getting recommendations"
-    print build_recommendations()
+    if not build_recommendations():
+        print "TEST: FAIL: Could not build recommendations"
+        return "test3 failed"
     return "test3 passed"
