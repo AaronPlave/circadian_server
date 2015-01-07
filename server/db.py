@@ -247,6 +247,7 @@ def add_user(user_id,picURL,name,deviceToken):
     else:
         print "DB: User already exists, checking for updates."
         query = {}
+        print "DB:",deviceToken,picURL,name,u
         if deviceToken not in u["deviceTokens"]:
             query["deviceToken"].append(deviceToken)
         if u["picURL"] != picURL:
