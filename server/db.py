@@ -2,7 +2,7 @@ import pymongo
 import os
 import datetime
 from bson.objectid import ObjectId
-from scraping import TIME_DELTA
+from scraping import TIME_DELTA, uuid
 
 MONGO_URI = os.environ.get('MONGOLAB_URI')
 if not MONGO_URI:
@@ -42,7 +42,6 @@ def get_groups_by_user_id(user_id):
         # get all the users
         if group["users"]:
             group_users = list(USERS.find({"user_id":{"$in":group["users"]}}))
-            print group_users,"DB: group users"
             for i in group_users:
                 del i["_id"]
                 del i["groups"]
@@ -53,8 +52,8 @@ def get_groups_by_user_id(user_id):
                 del i["user_id"]
 
             group["users"] = group_users
-        # a little formatting
-        group["_id"] = str(group["_id"])
+        # generate a new unique id for the song
+        group["_id"] = str(uuid.uuid4())[0:8]
         final_groups.append(group)
     return final_groups
 

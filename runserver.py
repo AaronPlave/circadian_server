@@ -66,7 +66,6 @@ def add_user():
     name = request.json.get("name")
     deviceToken = request.json.get("deviceToken")
     s = False
-    print "ADDING USER IN runserver"
     if db.add_user(user_id=userID,profilePictureURL=profilePictureURL,name=name,deviceToken=deviceToken):
         s = True
     return json.dumps({"ADD":s})
